@@ -11,27 +11,27 @@ jobs:
           - os: ubuntu-latest
             arch: x64
             build-name: linux-64bit
-            zip-command: zip -r
+            zip-command: zip -r linux-64bit.zip dist/main/*
           - os: ubuntu-latest
             arch: x86
             build-name: linux-32bit
-            zip-command: zip -r
+            zip-command: zip -r linux-32bit.zip dist/main/*
           - os: ubuntu-latest
             arch: arm64
             build-name: linux-arm64
-            zip-command: zip -r
+            zip-command: zip -r linux-arm64.zip dist/main/*
           - os: windows-latest
             arch: x64
             build-name: windows-64bit
-            zip-command: powershell -Command "Compress-Archive -Path"
+            zip-command: powershell -Command "Compress-Archive -Path 'dist/main/*' -DestinationPath 'windows-64bit.zip'"
           - os: windows-latest
             arch: x86
             build-name: windows-32bit
-            zip-command: powershell -Command "Compress-Archive -Path"
+            zip-command: powershell -Command "Compress-Archive -Path 'dist/main/*' -DestinationPath 'windows-32bit.zip'"
           - os: windows-latest
             arch: arm64
             build-name: windows-arm64
-            zip-command: powershell -Command "Compress-Archive -Path"
+            zip-command: powershell -Command "Compress-Archive -Path 'dist/main/*' -DestinationPath 'windows-arm64.zip'"
 
     steps:
       - name: Checkout code
@@ -57,7 +57,7 @@ jobs:
         run: pyinstaller main.py --add-data=Data:Data
 
       - name: Create ZIP archive
-        run: ${{ matrix.zip-command }} ${{ matrix.build-name }}.zip dist/main/*
+        run: ${{ matrix.zip-command }}
 
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4

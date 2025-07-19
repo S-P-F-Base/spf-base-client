@@ -16,6 +16,10 @@ jobs:
             arch: x86
             build-name: linux-32bit
             zip-command: zip -r
+          - os: ubuntu-latest
+            arch: arm64
+            build-name: linux-arm64
+            zip-command: zip -r
           - os: windows-latest
             arch: x64
             build-name: windows-64bit
@@ -23,6 +27,10 @@ jobs:
           - os: windows-latest
             arch: x86
             build-name: windows-32bit
+            zip-command: powershell -Command "Compress-Archive -Path"
+          - os: windows-latest
+            arch: arm64
+            build-name: windows-arm64
             zip-command: powershell -Command "Compress-Archive -Path"
 
     steps:
@@ -51,8 +59,31 @@ jobs:
       - name: Create ZIP archive
         run: ${{ matrix.zip-command }} ${{ matrix.build-name }}.zip dist/main/*
 
-      - name: Upload all builds
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.build-name }}
+          path: ${{ matrix.build-name }}.zip
+
+  combine:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all ZIP artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: allzips
+
+      - name: Flatten artifact structure
+        run: |
+          find allzips -name "*.zip" -exec mv {} ./ \;
+          rm -rf allzips
+
+      - name: Create combined ZIP archive
+        run: zip -r all-builds.zip *.zip
+
+      - name: Upload combined ZIP archive
         uses: actions/upload-artifact@v4
         with:
           name: all-builds
-          path: '*.zip'
+          path: all-builds.zip

@@ -1,0 +1,58 @@
+name: Build Executables
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            build-name: linux-64bit
+            zip-command: zip -r
+          - os: ubuntu-latest
+            arch: x86
+            build-name: linux-32bit
+            zip-command: zip -r
+          - os: windows-latest
+            arch: x64
+            build-name: windows-64bit
+            zip-command: powershell -Command "Compress-Archive -Path"
+          - os: windows-latest
+            arch: x86
+            build-name: windows-32bit
+            zip-command: powershell -Command "Compress-Archive -Path"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: pyinstaller main.py --add-data=Data:Data
+
+      - name: Create ZIP archive
+        run: ${{ matrix.zip-command }} ${{ matrix.build-name }}.zip dist/main/*
+
+      - name: Upload all builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-builds
+          path: '*.zip'

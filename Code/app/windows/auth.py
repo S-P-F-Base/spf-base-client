@@ -1,4 +1,8 @@
+import re
+
 import dearpygui.dearpygui as dpg
+
+from Code.tools import APIManager
 
 from .base_window import BaseWindow
 
@@ -12,10 +16,9 @@ class WindowAuth(BaseWindow):
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
         _, _, width, height = app_data
 
+        # region img
         size = min(width, height)
-
         size = int(size * 0.5)
-
         if dpg.does_item_exist("logo_light"):
             dpg.configure_item(
                 "logo_light",
@@ -30,6 +33,47 @@ class WindowAuth(BaseWindow):
                 width=size,
                 height=size,
             )
+        # endregion
+
+        width_middle = width // 2
+
+        # region header
+        if dpg.does_item_exist("text_header"):
+            dpg.set_item_pos("text_header", [width_middle - 49, 0])
+        # endregion
+
+        # region input-text
+        input_text_size = int(width * 0.6)
+        input_text_size_half = input_text_size // 2
+        temp = 28
+        for item in ["login_text", "password_text", "password_text_2"]:
+            if dpg.does_item_exist(item):
+                dpg.set_item_width(item, input_text_size)
+                dpg.set_item_pos(item, [width_middle - input_text_size_half, temp])
+                dpg.show_item(item)
+
+            temp += 22
+
+        # endregion
+
+        # region checkbox
+        if dpg.does_item_exist("see_password"):
+            dpg.set_item_pos(
+                "see_password",
+                [width_middle + input_text_size_half + 4, 50],
+            )
+        # endregion
+
+        # region btn's
+        if dpg.does_item_exist("login_btn"):
+            login_bth_width = dpg.get_item_rect_size("login_btn")[0]
+            dpg.set_item_pos("login_btn", [width_middle - login_bth_width // 2, 102])
+
+        if dpg.does_item_exist("switch_btn"):
+            login_bth_width = dpg.get_item_rect_size("switch_btn")[0]
+            dpg.set_item_pos("switch_btn", [width_middle - login_bth_width // 2, 124])
+
+        # endregion
 
     @classmethod
     def create(cls) -> None:
@@ -64,13 +108,18 @@ class WindowAuth(BaseWindow):
             )
             dpg.add_checkbox(
                 tag="see_password",
-                label="Посмотреть пароль",
                 callback=cls._toggle_see_password,
             )
 
-            dpg.add_button(tag="login_btn", label="Войти", callback=cls._enter)
             dpg.add_button(
-                tag="switch_btn", label="Сменить на регистрацию", callback=cls._switch
+                tag="login_btn",
+                label="Войти",
+                callback=cls._enter,
+            )
+            dpg.add_button(
+                tag="switch_btn",
+                label="Сменить на регистрацию",
+                callback=cls._switch,
             )
 
         dpg.set_primary_window(cls._tag, True)
@@ -94,15 +143,94 @@ class WindowAuth(BaseWindow):
                 hint="Повтор пароля",
                 password=cls._see_password,
                 parent=cls._tag,
+                show=False,
             )
             dpg.set_value("text_header", "Регистрация")
             dpg.set_item_label("switch_btn", "Сменить на авторизацию")
-            dpg.set_item_label("login_btn", "Зарегестироваться")
+            dpg.set_item_label("login_btn", "Зарегистрироваться")
 
+        dpg.render_dearpygui_frame()
         cls._invoce_resize()
 
     @classmethod
-    def _enter(cls) -> None: ...
+    def _enter(cls) -> None:
+        if cls._is_login:
+            cls._auth()
+        else:
+            cls._register()
+
+    @classmethod
+    def _auth(cls) -> None:
+        login = dpg.get_value("login_text")
+        password = dpg.get_value("password_text")
+
+        if not login:
+            cls._summon_popup("Пустое поле ввода", "Логин не может быть пустым полем.")
+            return
+
+        if not password:
+            cls._summon_popup("Пустое поле ввода", "Пароль не может быть пустым полем.")
+            return
+
+        try:
+            APIManager.auth_login(login, password)
+
+            # TODO: Открывать меню
+        except Exception as err:
+            text = {
+                "Incorrect username or password": "Неверный логин или пароль",
+            }.get(str(err), str(err))
+
+            cls._summon_popup("Сервер отослал ошибку", text)
+
+    @classmethod
+    def _register(cls) -> None:
+        login: str = dpg.get_value("login_text")
+        password: str = dpg.get_value("password_text")
+        password_2: str = dpg.get_value("password_text_2")
+
+        if not login:
+            cls._summon_popup("Пустое поле ввода", "Логин не может быть пустым полем.")
+            return
+
+        if not password:
+            cls._summon_popup("Пустое поле ввода", "Пароль не может быть пустым полем.")
+            return
+
+        if password != password_2:
+            cls._summon_popup(
+                "Ошибка обработки пароля", "Ваши пароли не совпадают друг с другом."
+            )
+            return
+
+        if not login.isascii():
+            cls._summon_popup(
+                "Ошибка обработки логина", "Ваш логин содержит не ascii символы."
+            )
+            return
+
+        new_login = re.sub(r"\s+", "_", login.strip())
+
+        if login != new_login:
+            cls._summon_popup(
+                "Ошибка обработки логина",
+                "Ваш логин не подходил по стандартам. Система заменила логин.",
+            )
+            dpg.set_value("login_text", new_login)
+            return
+
+        try:
+            APIManager.auth_register(login, password)
+
+            # TODO: Открывать меню
+        except Exception as err:
+            text = {
+                "Username contain non-ascii": "Логин содержит не ascii символы.",
+                "Username cannot be empty": "Логин не может быть пустой строкой.",
+                "User already exists": "Пользоватль с таким логином уже существует.",
+            }.get(str(err), str(err))
+
+            cls._summon_popup("Сервер отослал ошибку", text)
 
     @classmethod
     def _toggle_see_password(cls) -> None:

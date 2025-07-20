@@ -11,6 +11,14 @@ class APIManager:
     _session: Session = Session()
 
     @classmethod
+    def setup(cls) -> None:
+        cls._session.headers.update(
+            {
+                "User-Agent": "spf-agent-v1",
+            }
+        )
+
+    @classmethod
     def _update_headers(
         cls,
         access_token: str | None,

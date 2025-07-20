@@ -3,6 +3,7 @@ import atexit
 import dearpygui.dearpygui as dpg
 
 from Code.tools import (
+    APIManager,
     Config,
     FontManager,
     TextureManager,
@@ -31,6 +32,8 @@ class Core:
 
         TimerManager.initialize()
         atexit.register(TimerManager.stop)
+
+        APIManager.setup()
 
         dpg.set_viewport_resize_callback(ViewportResizeManager.invoke)
 

@@ -1,3 +1,4 @@
+from .api_manager import APIManager
 from .config import Config
 from .fonts_setup import FontManager
 from .texture import TextureManager

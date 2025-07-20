@@ -1,14 +1,28 @@
 import logging
+from enum import Enum
 from typing import Final
 
 from requests import Response, Session
 
+from .config import Config
+
 logger = logging.getLogger(__name__)
+
+
+# Реплика с сервера
+class UserAccess(Enum):
+    NO_ACCESS = 1 << 0
+    READ_USER_DATA = 1 << 1
 
 
 class APIManager:
     _base_url: Final[str] = "https://spf-base.ru/"
     _session: Session = Session()
+
+    cur_user = {
+        "login": "",
+        "access": 0,
+    }
 
     @classmethod
     def setup(cls) -> None:
@@ -21,8 +35,8 @@ class APIManager:
     @classmethod
     def _update_headers(
         cls,
-        access_token: str | None,
-        refresh_token: str | None,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
         **kwargs,
     ) -> None:
         headers = {}
@@ -30,6 +44,7 @@ class APIManager:
             headers["Authorization"] = f"Bearer {access_token}"
 
         if refresh_token:
+            Config.set_refresh_token_to_file(refresh_token)
             headers["X-Authorization-Refresh"] = f"Bearer {refresh_token}"
 
         if headers:
@@ -105,7 +120,7 @@ class APIManager:
 
     # endregion
 
-    # region base_url/auth
+    # region base_url/api/auth
     @classmethod
     def auth_login(cls, login: str, password: str) -> None:
         json_data = cls.requests_post(
@@ -131,7 +146,6 @@ class APIManager:
 
     @classmethod
     def auth_refresh(cls) -> None:
-        logger.info("Token expired, refreshing...")
         response = cls._session.post(
             cls._base_url + "api/auth/refresh",
         )
@@ -139,5 +153,41 @@ class APIManager:
         json_data = cls._response_sanity_check(response)
 
         cls._update_headers(**json_data)
+
+    @classmethod
+    def try_auth_viva_refresh(cls) -> bool:
+        try:
+            cls._update_headers(refresh_token=Config.get_refresh_token_form_file())
+            cls.auth_refresh()
+            return True
+
+        except Exception:
+            return False
+
+    @classmethod
+    def logout(cls) -> None:
+        Config.set_refresh_token_to_file("")
+        cls.cur_user = {
+            "login": "",
+            "access": 0,
+        }
+
+    # endregion
+
+    # region base_url/user_control
+    @classmethod
+    def user_control_get_info(cls, target: str) -> dict:
+        json_data = cls.requests_post(
+            "/api/user_control/get_info",
+            json={"target": target},
+        )
+
+        return json_data
+
+    @classmethod
+    def update_cur_user(cls) -> None:
+        json_data = cls.requests_get("/api/user_control/me")
+        cls.cur_user["login"] = json_data["login"]
+        cls.cur_user["access"] = json_data["access"]
 
     # endregion

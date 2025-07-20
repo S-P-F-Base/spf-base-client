@@ -49,6 +49,29 @@ class Config:
         return save_file
 
     @classmethod
+    def get_refresh_token_form_file(cls) -> str | None:
+        save_fold = cls.get_save_dir()
+        save_file = save_fold / ".refresh_token"
+
+        if not save_fold.exists():
+            save_fold.mkdir(parents=True, exist_ok=True)
+
+        if not save_file.exists():
+            return None
+
+        return save_file.read_text(encoding="utf-8")
+
+    @classmethod
+    def set_refresh_token_to_file(cls, value: str) -> None:
+        save_fold = cls.get_save_dir()
+        save_file = save_fold / ".refresh_token"
+
+        if not save_fold.exists():
+            save_fold.mkdir(parents=True, exist_ok=True)
+
+        save_file.write_text(value, encoding="utf-8")
+
+    @classmethod
     def get_data_dir_str(cls) -> str:
         path = cls._root_dir / "Data"
         path_str = str(path)

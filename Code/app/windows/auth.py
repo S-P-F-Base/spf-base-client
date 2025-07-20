@@ -5,6 +5,7 @@ import dearpygui.dearpygui as dpg
 from Code.tools import APIManager
 
 from .base_window import BaseWindow
+from .left_panel import WindowLeftPanel
 
 
 class WindowAuth(BaseWindow):
@@ -14,6 +15,9 @@ class WindowAuth(BaseWindow):
 
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
+        if not dpg.does_item_exist(cls._tag):
+            return
+
         _, _, width, height = app_data
 
         # region img
@@ -99,12 +103,21 @@ class WindowAuth(BaseWindow):
 
             dpg.add_text("Авторизация", tag="text_header")
 
-            dpg.add_input_text(tag="login_text", hint="Логин")
+            dpg.add_input_text(
+                tag="login_text",
+                hint="Логин",
+                callback=lambda: dpg.focus_item("password_text"),
+                on_enter=True,
+            )
 
             dpg.add_input_text(
                 tag="password_text",
                 hint="Пароль",
                 password=cls._see_password,
+                callback=lambda: dpg.focus_item("password_text_2")
+                if dpg.does_item_exist("password_text_2")
+                else cls._enter(),
+                on_enter=True,
             )
             dpg.add_checkbox(
                 tag="see_password",
@@ -122,6 +135,7 @@ class WindowAuth(BaseWindow):
                 callback=cls._switch,
             )
 
+        dpg.focus_item("login_text")
         dpg.set_primary_window(cls._tag, True)
         cls._setup_resize()
 
@@ -143,6 +157,8 @@ class WindowAuth(BaseWindow):
                 hint="Повтор пароля",
                 password=cls._see_password,
                 parent=cls._tag,
+                callback=cls._enter,
+                on_enter=True,
                 show=False,
             )
             dpg.set_value("text_header", "Регистрация")
@@ -175,7 +191,10 @@ class WindowAuth(BaseWindow):
         try:
             APIManager.auth_login(login, password)
 
-            # TODO: Открывать меню
+            APIManager.update_cur_user()
+
+            WindowLeftPanel.create()
+            cls._on_del()
         except Exception as err:
             text = {
                 "Incorrect username or password": "Неверный логин или пароль",
@@ -222,7 +241,10 @@ class WindowAuth(BaseWindow):
         try:
             APIManager.auth_register(login, password)
 
-            # TODO: Открывать меню
+            APIManager.update_cur_user()
+
+            WindowLeftPanel.create()
+            cls._on_del()
         except Exception as err:
             text = {
                 "Username contain non-ascii": "Логин содержит не ascii символы.",

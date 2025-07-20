@@ -11,7 +11,7 @@ from Code.tools import (
     ViewportResizeManager,
 )
 
-from .windows import WindowAuth
+from .windows import WindowAuth, WindowLeftPanel
 
 
 class Core:
@@ -37,7 +37,11 @@ class Core:
 
         dpg.set_viewport_resize_callback(ViewportResizeManager.invoke)
 
-        WindowAuth.create()
+        if APIManager.try_auth_viva_refresh():
+            APIManager.update_cur_user()
+            WindowLeftPanel.create()
+        else:
+            WindowAuth.create()
 
         dpg.setup_dearpygui()
         dpg.show_viewport()

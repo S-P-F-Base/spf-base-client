@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 class BaseWindow:
     _tag = ""
     _popup_tag = _tag + "_popup"
-    _viewport_resize_tag = ""
-    _timer_tag = ""
 
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None: ...

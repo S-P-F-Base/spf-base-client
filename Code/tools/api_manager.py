@@ -11,8 +11,21 @@ logger = logging.getLogger(__name__)
 
 # Реплика с сервера
 class UserAccess(Enum):
-    NO_ACCESS = 1 << 0
-    READ_USER_DATA = 1 << 1
+    NO_ACCESS = 0
+    ALL_ACCESS = 1 << 0
+
+    READ_USER = 1 << 1
+    CONTROL_USER = 1 << 2
+
+    READ_GAME_SERVER = 1 << 3
+    CONTROL_GAME_SERVER = 1 << 4
+
+    READ_PAYMENT = 1 << 5
+    GIVE_PAYMENT = 1 << 6
+    CONTROL_PAYMENT = 1 << 7
+
+    READ_PLAYER = 1 << 8
+    CONTROL_PLAYER = 1 << 9
 
 
 class APIManager:
@@ -174,7 +187,7 @@ class APIManager:
 
     # endregion
 
-    # region base_url/user_control
+    # region base_url/api/user_control
     @classmethod
     def user_control_get_info(cls, target: str) -> dict:
         json_data = cls.requests_post(
@@ -183,6 +196,23 @@ class APIManager:
         )
 
         return json_data
+
+    @classmethod
+    def user_control_get_all(cls) -> list:
+        json_data = cls.requests_get("/api/user_control/get_all")
+        return json_data.get("logins", [])
+
+    # endregion
+
+    # region etc
+    @classmethod
+    def has_access(cls, value: int) -> bool:
+        if (
+            cls.cur_user["access"] & UserAccess.ALL_ACCESS.value
+        ) == UserAccess.ALL_ACCESS.value:
+            return True
+
+        return (cls.cur_user["access"] & value) == value
 
     @classmethod
     def update_cur_user(cls) -> None:

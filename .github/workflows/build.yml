@@ -74,18 +74,14 @@ jobs:
         with:
           path: allzips
 
-      - name: Unzip each artifact into its own folder
+      - name: Move all ZIPs to one folder
         run: |
-          mkdir unpacked
-          for zip in allzips/**/*.zip; do
-            name=$(basename "$zip" .zip)
-            mkdir "unpacked/$name"
-            unzip -q "$zip" -d "unpacked/$name"
-          done
+          mkdir zips
+          find allzips -name "*.zip" -exec mv {} zips/ \;
           rm -rf allzips
 
-      - name: Upload all builds folder
+      - name: Upload all ZIPs as one artifact
         uses: actions/upload-artifact@v4
         with:
           name: all-builds
-          path: unpacked/
+          path: zips/

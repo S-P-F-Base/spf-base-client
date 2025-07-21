@@ -15,7 +15,27 @@ class APIError(ValueError):
         self.code = code
 
 
-# Реплика с сервера
+class UserAccessTranslate(Enum):
+    ALL_ACCESS = "Полные права"
+
+    READ_USER = "Смотреть данные других пользователей"
+    CONTROL_USER = "Управлять данными пользователями"
+
+    READ_GAME_SERVER = "Смотреть игровой сервер"
+    CONTROL_GAME_SERVER = "Управлять игровым сервером"
+
+    READ_PAYMENT = "Читать чеки"
+    GIVE_PAYMENT = "Выдавать чеки"
+    CONTROL_PAYMENT = "Управлять донатом"
+
+    READ_PLAYER = "Читать данные игрока"
+    CONTROL_PLAYER = "Управлять данными игроков"
+
+    READ_LOGS = "Читать логи"
+    CONTROL_LOGS = "Управлять логами"
+
+
+# Реплика с сервераы
 class UserAccess(Enum):
     NO_ACCESS = 0
     ALL_ACCESS = 1 << 0
@@ -32,6 +52,9 @@ class UserAccess(Enum):
 
     READ_PLAYER = 1 << 8
     CONTROL_PLAYER = 1 << 9
+
+    READ_LOGS = 1 << 10
+    CONTROL_LOGS = 1 << 11
 
 
 class APIManager:

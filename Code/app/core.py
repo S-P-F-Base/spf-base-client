@@ -7,6 +7,7 @@ from Code.tools import (
     Config,
     FontManager,
     TextureManager,
+    ThemesManager,
     TimerManager,
     ViewportResizeManager,
 )
@@ -25,7 +26,8 @@ class Core:
         )
 
         FontManager.load_fonts()
-        TextureManager.load_static_img()
+        ThemesManager.load_themes()
+        TextureManager.load_images()
 
         Config.load()
         atexit.register(Config.save)

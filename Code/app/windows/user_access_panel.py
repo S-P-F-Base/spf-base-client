@@ -1,8 +1,9 @@
 import logging
+from dataclasses import dataclass
 
 import dearpygui.dearpygui as dpg
 
-from Code.tools import APIError, APIManager, Config, UserAccess
+from Code.tools import APIError, APIManager, Config, UserAccess, UserAccessTranslate
 
 from .base_window import BaseWindow
 
@@ -55,7 +56,7 @@ class UserAccessPanel(BaseWindow):
 
     @classmethod
     def update_user_list(cls) -> None:
-        cls._user_list = sorted(APIManager.user_control_get_all() + ["SomeDude"])
+        cls._user_list = sorted(APIManager.user_control_get_all())
 
     @classmethod
     def render_btns(cls) -> None:
@@ -112,9 +113,23 @@ class UserAccessPanel(BaseWindow):
         cls._setup_resize()
 
 
+@dataclass
+class _AccessPresets:
+    name: str
+    access: int
+
+
 class _UserInfoCard(BaseWindow):
     _tag = "_UserInfoCard"
-    _cur_user = ""
+    _access_preset = [
+        _AccessPresets("Без прав", UserAccess.NO_ACCESS.value),
+        _AccessPresets(
+            "Запуск сервера",
+            UserAccess.READ_GAME_SERVER.value | UserAccess.CONTROL_GAME_SERVER.value,
+        ),
+        _AccessPresets("Полные права", UserAccess.ALL_ACCESS.value),
+    ]
+    _cur_user = {}
 
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
@@ -123,6 +138,7 @@ class _UserInfoCard(BaseWindow):
 
         window_width, window_hight = cls._setup_window(app_data, [0.67, 1], [0.33, 0])
 
+    # region checkboxes
     @classmethod
     def render_access_checkboxes(
         cls,
@@ -135,10 +151,16 @@ class _UserInfoCard(BaseWindow):
                 continue
 
             dpg.add_checkbox(
-                label=access.name.replace("_", " ").title(),
+                label=UserAccessTranslate[access.name].value
+                if access.name in UserAccessTranslate.__members__
+                else access.name.replace("_", " ").title(),
                 tag=f"{prefix}{access.name}",
                 default_value=bool(access_value & access.value),
                 parent=parent,
+                callback=lambda: dpg.set_value(
+                    cls._tag + "_preset",
+                    cls._get_preset_by_access(cls.collect_access_from_checkboxes()),
+                ),
             )
 
     @classmethod
@@ -154,16 +176,19 @@ class _UserInfoCard(BaseWindow):
 
         return access_value
 
+    # endregion
+
+    # region user_control
     @classmethod
     def delete_user(cls, sender, app_data, user_data) -> None:
         if not (dpg.is_key_down(dpg.mvKey_LShift) or dpg.is_key_down(dpg.mvKey_RShift)):
             cls._summon_popup(
-                "Ошибка",
-                "Для того чтобы удалить пользователя необходимо зажать shift. Базовоая мера предосторожности.",
+                "Внимание!",
+                "Для того чтобы удалить пользователя необходимо зажать shift.",
             )
             return
 
-        logger.info("Ей... Ты удалил запись. Возможно")
+        logger.info("Ей... Ты удалил запись. Возможно")  # TODO: LOGIC
 
         UserAccessPanel.update_user_list()
         UserAccessPanel.render_btns()
@@ -171,9 +196,49 @@ class _UserInfoCard(BaseWindow):
 
     @classmethod
     def update_user(cls, sender, app_data, user_data) -> None:
-        logger.info(cls.collect_access_from_checkboxes())
+        logger.info(cls.collect_access_from_checkboxes())  # TODO: LOGIC
 
         cls._on_del()
+
+    @classmethod
+    def clear_user_access(cls, sender, app_data, user_data) -> None:
+        if not (dpg.is_key_down(dpg.mvKey_LShift) or dpg.is_key_down(dpg.mvKey_RShift)):
+            cls._summon_popup(
+                "Внимание!",
+                "Для того чтобы очистить права пользователя необходимо зажать shift.",
+            )
+            return
+
+        logger.info(0)  # TODO: LOGIC
+
+        cls._on_del()
+
+    # endregion
+
+    # region presets
+    @classmethod
+    def _get_preset_by_access(cls, access_value: int) -> str:
+        for item in cls._access_preset:
+            if item.access == access_value:
+                return item.name
+
+        return "Кастомный"
+
+    @classmethod
+    def _on_preset_selected(cls, sender, app_data, user_data) -> None:
+        preset = next((p for p in cls._access_preset if p.name == app_data), None)
+        if not preset:
+            return
+
+        for access in UserAccess:
+            if access == UserAccess.NO_ACCESS:
+                continue
+
+            tag = f"chk_{access.name}"
+            if dpg.does_item_exist(tag):
+                dpg.set_value(tag, bool(preset.access & access.value))
+
+    # endregion
 
     @classmethod
     def create_user_card(cls, login: str) -> None:
@@ -208,8 +273,19 @@ class _UserInfoCard(BaseWindow):
                 dpg.add_text(cls._cur_user["login"], color=Config.accent_color)
 
             dpg.add_separator()
-            dpg.add_text("Нет. Это не будет переведено")
-            with dpg.group(tag=cls._tag + "_access"):
+            preset_name = cls._get_preset_by_access(cls._cur_user["access"])
+            dpg.add_combo(
+                [p.name for p in cls._access_preset],
+                default_value=preset_name,
+                tag=cls._tag + "_preset",
+                callback=cls._on_preset_selected,
+            )
+
+            dpg.add_separator()
+            with dpg.collapsing_header(
+                label="Тонкая настройка прав",
+                tag=cls._tag + "_access",
+            ):
                 cls.render_access_checkboxes(
                     cls._tag + "_access",
                     cls._cur_user["access"],
@@ -219,17 +295,21 @@ class _UserInfoCard(BaseWindow):
             with dpg.group(horizontal=True, tag=cls._tag + "_btns"):
                 dpg.add_button(
                     label="Обновить",
-                    width=100,
+                    width=80,
                     callback=cls.update_user,
                 )
                 dpg.add_button(
                     label="Удалить",
-                    width=100,
+                    width=80,
                     callback=cls.delete_user,
+                    enabled=cls._cur_user["login"] != APIManager.cur_user["login"],
+                )
+                dpg.add_button(
+                    label="Очистить", width=80, callback=cls.clear_user_access
                 )
                 dpg.add_button(
                     label="Закрыть",
-                    width=100,
+                    width=80,
                     callback=cls._on_del,
                 )
 

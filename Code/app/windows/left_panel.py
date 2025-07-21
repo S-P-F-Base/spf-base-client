@@ -101,6 +101,7 @@ class WindowLeftPanel(BaseWindow):
                     tag=cls._tag + item.tag_postfix,
                     callback=item.func,  # type: ignore
                     show=APIManager.has_access(item.access),
+                    enabled=item.func is not None,
                 )
 
             with dpg.group(horizontal=True, tag=cls._tag + "_btn_logout"):
@@ -108,6 +109,6 @@ class WindowLeftPanel(BaseWindow):
                     label="Выйти",
                     callback=cls._logout,
                 )
-                dpg.add_button(label="?")
+                dpg.add_button(label="?", enabled=False)
 
         cls._setup_resize()

@@ -74,16 +74,13 @@ jobs:
         with:
           path: allzips
 
-      - name: Flatten artifact structure
+      - name: Unzip all artifacts into a flat directory
         run: |
-          find allzips -name "*.zip" -exec mv {} ./ \;
+          mkdir unpacked
+          find allzips -name "*.zip" -exec unzip -q {} -d unpacked \;
           rm -rf allzips
 
       - name: Create combined ZIP archive
-        run: zip -r all-builds.zip *.zip
-
-      - name: Upload combined ZIP archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-builds
-          path: all-builds.zip
+        run: |
+          cd unpacked
+          zip -r ../all-builds.zip .

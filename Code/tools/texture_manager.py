@@ -10,7 +10,11 @@ class TextureManager:
     ]
 
     @classmethod
-    def load_static_img(cls):
+    def load_images(cls):
+        cls._load_static_img()
+
+    @classmethod
+    def _load_static_img(cls):
         data_path = Config.get_data_dir_str()
         for file in cls._static_img_names:
             x, y, _, data = dpg.load_image(data_path + file)

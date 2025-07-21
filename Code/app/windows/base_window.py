@@ -105,7 +105,7 @@ class BaseWindow:
             header_size_x = dpg.get_text_size(dpg.get_value(cls._popup_tag + "_h"))[0]
             dpg.set_item_pos(
                 cls._popup_tag + "_h",
-                [window_width // 2 - header_size_x // 2, 0],
+                [window_width // 2 - header_size_x // 2, 8],
             )
 
         if dpg.does_item_exist(cls._popup_tag + "_t"):

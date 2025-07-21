@@ -1,6 +1,7 @@
-from .api_manager import APIManager, UserAccess, APIError
+from .api_manager import APIError, APIManager, UserAccess, UserAccessTranslate
 from .config import Config
-from .fonts_setup import FontManager
-from .texture import TextureManager
-from .timer import TimerManager
+from .fonts_manager import FontManager
+from .texture_manager import TextureManager
+from .themes_manager import ThemesManager
+from .timer_manager import TimerManager
 from .viewport_resize import ViewportResizeManager

@@ -84,3 +84,9 @@ jobs:
         run: |
           cd unpacked
           zip -r ../all-builds.zip .
+
+      - name: Upload combined ZIP archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-builds
+          path: all-builds.zip

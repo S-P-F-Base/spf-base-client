@@ -19,6 +19,11 @@ class Config:
     app_version: Final[str] = "ДАЙТЕ ЖИТЬ БЛЯДИ"
     _config_serl_ver: Final[str] = "1"
 
+    # region colors
+    accent_color: Final[list[int]] = [255, 165, 0, 255]
+
+    # endregion
+
     @classmethod
     def get_save_dir(cls) -> Path:
         system_name = platform.system()

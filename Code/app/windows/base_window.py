@@ -147,7 +147,6 @@ class BaseWindow:
                 tag=cls._popup_tag + "_b",
             )
 
-        dpg.render_dearpygui_frame()
         ViewportResizeManager.add_callback(cls._popup_tag, cls._popup_resize)
 
     # endregion

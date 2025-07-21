@@ -9,6 +9,12 @@ from .config import Config
 logger = logging.getLogger(__name__)
 
 
+class APIError(ValueError):
+    def __init__(self, message: str, code: int):
+        super().__init__(message)
+        self.code = code
+
+
 # Реплика с сервера
 class UserAccess(Enum):
     NO_ACCESS = 0
@@ -72,7 +78,7 @@ class APIManager:
             except Exception:
                 error_detail = response.text
 
-            raise ValueError(error_detail)
+            raise APIError(error_detail, response.status_code)
 
         try:
             return response.json()
@@ -92,7 +98,7 @@ class APIManager:
             response = cls._session.get(cls._base_url + url, params=params or {})
             return cls._response_sanity_check(response)
 
-        except ValueError as err:
+        except APIError as err:
             if str(err) == "Token expired" and _retry:
                 cls.auth_refresh()
                 return cls.requests_get(url, params, False)
@@ -111,7 +117,7 @@ class APIManager:
             response = cls._session.post(cls._base_url + url, json=json)
             return cls._response_sanity_check(response)
 
-        except ValueError as err:
+        except APIError as err:
             if str(err) == "Token expired" and _retry:
                 cls.auth_refresh()
                 return cls.requests_post(url, json, False)

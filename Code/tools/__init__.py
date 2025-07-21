@@ -1,4 +1,4 @@
-from .api_manager import APIManager, UserAccess
+from .api_manager import APIManager, UserAccess, APIError
 from .config import Config
 from .fonts_setup import FontManager
 from .texture import TextureManager

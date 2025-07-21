@@ -78,6 +78,7 @@ class WindowLeftPanel(BaseWindow):
         cls._on_del()
 
         APIManager.logout()
+        UserAccessPanel.delete()
 
         from .auth import WindowAuth
 

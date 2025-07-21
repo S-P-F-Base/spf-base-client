@@ -112,6 +112,11 @@ class UserAccessPanel(BaseWindow):
 
         cls._setup_resize()
 
+    @classmethod
+    def delete(cls) -> None:
+        _UserInfoCard.delete()
+        return super().delete()
+
 
 @dataclass
 class _AccessPresets:

@@ -42,6 +42,10 @@ class WindowLeftPanel(BaseWindow):
             pos=[0, 0],
         ):
             dpg.add_text(str(APIManager.cur_user), wrap=0)
-            dpg.add_button(label="Выйти", callback=cls._logout)
+            dpg.add_button(
+                label="Выйти",
+                callback=cls._logout,
+                tag=cls._tag + "_btn_logout",
+            )
 
         cls._setup_resize()

@@ -70,7 +70,11 @@ class WindowAuth(BaseWindow):
 
         # region btn's
         if dpg.does_item_exist("login_btn"):
-            login_bth_width = dpg.get_item_rect_size("login_btn")[0]
+            if cls._is_login:
+                login_bth_width = 53
+            else:
+                login_bth_width = 170
+
             dpg.set_item_pos("login_btn", [width_middle - login_bth_width // 2, 102])
 
         if dpg.does_item_exist("switch_btn"):
@@ -165,7 +169,6 @@ class WindowAuth(BaseWindow):
             dpg.set_item_label("switch_btn", "Сменить на авторизацию")
             dpg.set_item_label("login_btn", "Зарегистрироваться")
 
-        dpg.render_dearpygui_frame()
         cls._invoce_resize()
 
     @classmethod

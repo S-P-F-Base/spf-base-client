@@ -11,6 +11,7 @@ class BaseWindow:
     _tag = ""
     _popup_tag = _tag + "_popup"
 
+    # region Resize
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None: ...
 
@@ -30,6 +31,12 @@ class BaseWindow:
             logger.error(f"Error in callback: {e}")
 
     @classmethod
+    def _setup_resize(cls) -> None:
+        ViewportResizeManager.add_callback(cls._tag, cls._on_resize)
+
+    # endregion
+
+    @classmethod
     def _on_del(cls) -> None:
         if dpg.does_item_exist(cls._tag):
             dpg.delete_item(cls._tag)
@@ -38,9 +45,29 @@ class BaseWindow:
         TimerManager.remove_timer(cls._tag)
 
     @classmethod
-    def _setup_resize(cls) -> None:
-        ViewportResizeManager.add_callback(cls._tag, cls._on_resize)
+    def _setup_window(
+        cls,
+        app_data: tuple[int, int, int, int],
+        size: tuple[float, float] | list[float],
+        pos: tuple[float, float] | list[float],
+    ) -> tuple[int, int]:
+        window_width = int(app_data[2] * size[0])
+        window_hight = int(app_data[3] * size[1])
 
+        dpg.set_item_width(cls._tag, window_width)
+        dpg.set_item_height(cls._tag, window_hight)
+
+        dpg.set_item_pos(
+            cls._tag,
+            [
+                (app_data[2] * pos[0]),
+                (app_data[3] * pos[1]),
+            ],
+        )
+
+        return window_width, window_hight
+
+    # region Public
     @classmethod
     def create(cls) -> None: ...
 
@@ -52,6 +79,8 @@ class BaseWindow:
     @classmethod
     def delete(cls) -> None:
         cls._on_del()
+
+    # endregion
 
     # region Popup
     @classmethod

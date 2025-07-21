@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from dataclasses import dataclass
+
 import dearpygui.dearpygui as dpg
 
 from Code.tools import APIManager, UserAccess, ViewportResizeManager
@@ -6,34 +9,42 @@ from .base_window import BaseWindow
 from .user_access_panel import UserAccessPanel
 
 
+@dataclass
+class _BtnInfo:
+    name: str
+    tag_postfix: str
+    func: Callable[[], None] | None = None
+    access: int = 0
+
+
 class WindowLeftPanel(BaseWindow):
     _tag = "WindowLeftPanel"
     _btns_list = [
-        (
+        _BtnInfo(
             "Управление правами",
             "_btn_user_access",
             UserAccessPanel.create,
             UserAccess.READ_USER.value | UserAccess.CONTROL_USER.value,
         ),
-        (
+        _BtnInfo(
             "Управление сервером",
             "_btn_server_access",
             None,
             UserAccess.READ_GAME_SERVER.value | UserAccess.CONTROL_GAME_SERVER.value,
         ),
-        (
+        _BtnInfo(
             "Управление игроками",
             "_btn_player_control",
             None,
             UserAccess.READ_PLAYER.value | UserAccess.CONTROL_PLAYER.value,
         ),
-        (
+        _BtnInfo(
             "Оплата доната",
             "_btn_payment_give",
             None,
             UserAccess.READ_PAYMENT.value | UserAccess.GIVE_PAYMENT.value,
         ),
-        (
+        _BtnInfo(
             "Управление донат услугами",
             "_btn_payment_access",
             None,
@@ -46,17 +57,12 @@ class WindowLeftPanel(BaseWindow):
         if not dpg.does_item_exist(cls._tag):
             return
 
-        _, _, width, height = app_data
-        window_width = width * 0.33
-
-        dpg.set_item_width(cls._tag, int(window_width))
-        dpg.set_item_height(cls._tag, height)
+        window_width, window_height = cls._setup_window(app_data, [0.33, 1], [0, 0])
 
         margin_x = int(window_width - 16)
         init_pos_x, init_pos_y = 8, 8
         for item in cls._btns_list:
-            _, tag_pref, _, _ = item
-            tag = cls._tag + tag_pref
+            tag = cls._tag + item.tag_postfix
 
             if dpg.does_item_exist(tag) and dpg.is_item_shown(tag):
                 dpg.set_item_pos(tag, [init_pos_x, init_pos_y])
@@ -65,7 +71,7 @@ class WindowLeftPanel(BaseWindow):
                 init_pos_y += 22
 
         if dpg.does_item_exist(cls._tag + "_btn_logout"):
-            dpg.set_item_pos(cls._tag + "_btn_logout", [8, height - 28])
+            dpg.set_item_pos(cls._tag + "_btn_logout", [8, window_height - 28])
 
     @classmethod
     def _logout(cls) -> None:
@@ -90,12 +96,11 @@ class WindowLeftPanel(BaseWindow):
             pos=[0, 0],
         ):
             for item in cls._btns_list:
-                name, tag_pref, func, access = item
                 dpg.add_button(
-                    label=name,
-                    tag=cls._tag + tag_pref,
-                    callback=func,  # type: ignore
-                    show=APIManager.has_access(access),
+                    label=item.name,
+                    tag=cls._tag + item.tag_postfix,
+                    callback=item.func,  # type: ignore
+                    show=APIManager.has_access(item.access),
                 )
 
             with dpg.group(horizontal=True, tag=cls._tag + "_btn_logout"):

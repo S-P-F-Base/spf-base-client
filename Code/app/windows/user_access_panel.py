@@ -56,7 +56,7 @@ class UserAccessPanel(BaseWindow):
 
     @classmethod
     def update_user_list(cls) -> None:
-        cls._user_list = sorted(APIManager.user_control_get_all())
+        cls._user_list = sorted(APIManager.user_control.get_all())
 
     @classmethod
     def render_btns(cls) -> None:
@@ -250,7 +250,7 @@ class _UserInfoCard(BaseWindow):
         cls._on_del()
 
         try:
-            cls._cur_user = APIManager.user_control_get_info(login)
+            cls._cur_user = APIManager.user_control.get_info(login)
 
         except APIError as err:
             if err.code == 404:

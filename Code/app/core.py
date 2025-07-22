@@ -39,7 +39,7 @@ class Core:
 
         dpg.set_viewport_resize_callback(ViewportResizeManager.invoke)
 
-        if APIManager.try_auth_viva_refresh():
+        if APIManager.auth.login_refresh():
             APIManager.update_cur_user()
             WindowLeftPanel.create()
         else:

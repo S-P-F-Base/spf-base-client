@@ -192,7 +192,7 @@ class WindowAuth(BaseWindow):
             return
 
         try:
-            APIManager.auth_login(login, password)
+            APIManager.auth.login(login, password)
 
             APIManager.update_cur_user()
 
@@ -242,7 +242,7 @@ class WindowAuth(BaseWindow):
             return
 
         try:
-            APIManager.auth_register(login, password)
+            APIManager.auth.register(login, password)
 
             APIManager.update_cur_user()
 

@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Final
+from typing import Final, Literal
 
 from requests import Response, Session
 
@@ -60,12 +60,12 @@ class UserAccess(Enum):
 class APIManager:
     _base_url: Final[str] = "https://spf-base.ru/"
     _session: Session = Session()
-
     cur_user = {
         "login": "",
         "access": 0,
     }
 
+    # region Base
     @classmethod
     def setup(cls) -> None:
         cls._session.headers.update(
@@ -75,7 +75,7 @@ class APIManager:
         )
 
     @classmethod
-    def _update_headers(
+    def _update_auth_headers(
         cls,
         access_token: str | None = None,
         refresh_token: str | None = None,
@@ -109,127 +109,32 @@ class APIManager:
         except Exception:
             raise ValueError("Response does not contain json")
 
-    # region requests
     @classmethod
-    def requests_get(
+    def _requests(
         cls,
+        method: Literal["GET", "POST"],
         url: str,
-        params: dict | None = None,
         _retry: bool = True,
-    ) -> dict:
+        **kwargs,
+    ):
         try:
-            response = cls._session.get(cls._base_url + url, params=params or {})
+            response = cls._session.request(method, cls._base_url + url, **kwargs)
             return cls._response_sanity_check(response)
 
         except APIError as err:
             if str(err) == "Token expired" and _retry:
-                cls.auth_refresh()
-                return cls.requests_get(url, params, False)
+                cls._refresh()
+                return cls._requests(method, url, False, **kwargs)
 
             else:
                 raise err
 
     @classmethod
-    def requests_post(
-        cls,
-        url: str,
-        json: dict | None,
-        _retry: bool = True,
-    ) -> dict:
-        try:
-            response = cls._session.post(cls._base_url + url, json=json)
-            return cls._response_sanity_check(response)
-
-        except APIError as err:
-            if str(err) == "Token expired" and _retry:
-                cls.auth_refresh()
-                return cls.requests_post(url, json, False)
-
-            else:
-                raise err
-
-    # endregion
-
-    # region base_url/download
-    @classmethod
-    def download_version(cls) -> str | None:
-        try:
-            response = cls._session.get(cls._base_url + "download/version")
-            return response.json().get("version") if response.ok else None
-
-        except Exception:
-            return None
-
-    # endregion
-
-    # region base_url/api/auth
-    @classmethod
-    def auth_login(cls, login: str, password: str) -> None:
-        json_data = cls.requests_post(
-            "api/auth/login",
-            {
-                "username": login,
-                "password": password,
-            },
-        )
-
-        cls._update_headers(**json_data)
-
-    @classmethod
-    def auth_register(cls, login: str, password: str) -> None:
-        json_data = cls.requests_post(
-            "api/auth/register",
-            {
-                "username": login,
-                "password": password,
-            },
-        )
-        cls._update_headers(**json_data)
-
-    @classmethod
-    def auth_refresh(cls) -> None:
-        response = cls._session.post(
-            cls._base_url + "api/auth/refresh",
-        )
-        # Нельзя использовать requests_post, иначе будет бесконечная рекурсия 100%
+    def _refresh(cls) -> None:
+        response = cls._session.get(cls._base_url + "api/auth/refresh")
         json_data = cls._response_sanity_check(response)
 
-        cls._update_headers(**json_data)
-
-    @classmethod
-    def try_auth_viva_refresh(cls) -> bool:
-        try:
-            cls._update_headers(refresh_token=Config.get_refresh_token_form_file())
-            cls.auth_refresh()
-            return True
-
-        except Exception:
-            return False
-
-    @classmethod
-    def logout(cls) -> None:
-        Config.set_refresh_token_to_file("")
-        cls.cur_user = {
-            "login": "",
-            "access": 0,
-        }
-
-    # endregion
-
-    # region base_url/api/user_control
-    @classmethod
-    def user_control_get_info(cls, target: str) -> dict:
-        json_data = cls.requests_post(
-            "/api/user_control/get_info",
-            json={"target": target},
-        )
-
-        return json_data
-
-    @classmethod
-    def user_control_get_all(cls) -> list:
-        json_data = cls.requests_get("/api/user_control/get_all")
-        return json_data.get("logins", [])
+        cls._update_auth_headers(**json_data)
 
     # endregion
 
@@ -245,8 +150,80 @@ class APIManager:
 
     @classmethod
     def update_cur_user(cls) -> None:
-        json_data = cls.requests_get("/api/user_control/me")
+        json_data = cls._requests("GET", "/api/user_control/me")
         cls.cur_user["login"] = json_data["login"]
         cls.cur_user["access"] = json_data["access"]
 
     # endregion
+
+    class download:
+        @classmethod
+        def version(cls) -> str | None:
+            try:
+                json_data = APIManager._requests("GET", "download/version")
+                return json_data.get("version", None)
+
+            except Exception:
+                return None
+
+    class auth:
+        @classmethod
+        def login(cls, login: str, password: str) -> None:
+            json_data = APIManager._requests(
+                "POST",
+                "api/auth/login",
+                json={
+                    "username": login,
+                    "password": password,
+                },
+            )
+
+            APIManager._update_auth_headers(**json_data)
+
+        @classmethod
+        def register(cls, login: str, password: str) -> None:
+            json_data = APIManager._requests(
+                "POST",
+                "api/auth/register",
+                json={
+                    "username": login,
+                    "password": password,
+                },
+            )
+            APIManager._update_auth_headers(**json_data)
+
+        @classmethod
+        def login_refresh(cls) -> bool:
+            try:
+                APIManager._update_auth_headers(
+                    refresh_token=Config.get_refresh_token_form_file()
+                )
+                APIManager._refresh()
+                return True
+
+            except Exception:
+                return False
+
+        @classmethod
+        def logout(cls) -> None:
+            Config.set_refresh_token_to_file("")
+            cls.cur_user = {
+                "login": "",
+                "access": 0,
+            }
+
+    class user_control:
+        @classmethod
+        def get_info(cls, target: str) -> dict:
+            json_data = APIManager._requests(
+                "POST",
+                "/api/user_control/get_info",
+                json={"target": target},
+            )
+
+            return json_data
+
+        @classmethod
+        def get_all(cls) -> list:
+            json_data = APIManager._requests("GET", "/api/user_control/get_all")
+            return json_data.get("logins", [])

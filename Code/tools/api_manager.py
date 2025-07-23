@@ -241,3 +241,17 @@ class APIManager:
                 "/api/user_control/set_access",
                 json={"target": target, "access": access},
             )
+
+    class server_control:
+        @classmethod
+        def start(cls) -> None:
+            APIManager._requests("GET", "/api/server_control/start")
+
+        @classmethod
+        def stop(cls) -> None:
+            APIManager._requests("GET", "/api/server_control/stop")
+
+        @classmethod
+        def status(cls) -> dict[str, str]:
+            json_data = APIManager._requests("GET", "/api/server_control/status")
+            return json_data

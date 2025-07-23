@@ -31,10 +31,6 @@ class BaseWindow:
         except Exception as e:
             logger.error(f"Error in callback: {e}")
 
-    @classmethod
-    def _setup_resize(cls) -> None:
-        ViewportResizeManager.add_callback(cls._tag, cls._on_resize)
-
     # endregion
 
     @classmethod
@@ -85,7 +81,7 @@ class BaseWindow:
     @classmethod
     def create(cls) -> None:
         cls._add_window()
-        cls._setup_resize()
+        ViewportResizeManager.add_callback(cls._tag, cls._on_resize)
 
     @classmethod
     def focus(cls) -> None:

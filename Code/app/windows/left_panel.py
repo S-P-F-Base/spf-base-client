@@ -13,6 +13,7 @@ from Code.tools import (
 )
 
 from .base_window import BaseWindow
+from .server_control_panel import ServerControlPanel
 from .user_access_panel import UserAccessPanel
 
 
@@ -36,7 +37,7 @@ class WindowLeftPanel(BaseWindow):
         _BtnInfo(
             "Управление сервером",
             "_btn_server_access",
-            None,
+            ServerControlPanel.create,
             UserAccess.READ_GAME_SERVER.value | UserAccess.CONTROL_GAME_SERVER.value,
         ),
         _BtnInfo(

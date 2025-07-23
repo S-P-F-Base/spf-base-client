@@ -110,8 +110,7 @@ class UserAccessPanel(BaseWindow):
             dpg.add_separator()
             cls.render_btns()
 
-        cls._add_window()
-        cls._setup_resize()
+        super().create()
 
     @classmethod
     def delete(cls) -> None:

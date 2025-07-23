@@ -12,11 +12,8 @@ class FontManager:
             with dpg.font(font_path, 13) as default_font:
                 dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
                 dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
-
-                # Greek character range
-                dpg.add_font_range(0x0391, 0x03C9)
-
-                # Range of upper and lower numerical indices
-                dpg.add_font_range(0x2070, 0x209F)
+                
+                # ←, →
+                dpg.add_font_chars([0x2190, 0x2192])
 
         dpg.bind_font(default_font)

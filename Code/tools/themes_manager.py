@@ -39,6 +39,9 @@ class ThemesManager:
 
     @classmethod
     def _attention_theme_ch(cls) -> None:
+        if not dpg.does_item_exist(cls.theme_att_id):
+            return
+
         t = dpg.get_total_time()
         pulse = (math.sin(t * 2 * math.pi * 0.5) + 1) / 2
 

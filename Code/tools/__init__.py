@@ -1,4 +1,11 @@
-from .api_manager import APIError, APIManager, UserAccess, UserAccessTranslate
+from .api_manager import (
+    APIError,
+    APIManager,
+    LogType,
+    LogTypeTranslate,
+    UserAccess,
+    UserAccessTranslate,
+)
 from .config import Config
 from .fonts_manager import FontManager
 from .texture_manager import TextureManager

@@ -4,11 +4,6 @@ from Code.tools import APIError, APIManager, TimerManager
 
 from .base_window import BaseWindow
 
-# Включен
-# Включение
-# Выключен
-# Выключение
-
 
 class ServerControlPanel(BaseWindow):
     _tag = "ServerControlPanel"

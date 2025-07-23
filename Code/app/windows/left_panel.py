@@ -13,6 +13,7 @@ from Code.tools import (
 )
 
 from .base_window import BaseWindow
+from .logs_panel import LogPanel
 from .server_control_panel import ServerControlPanel
 from .user_access_panel import UserAccessPanel
 
@@ -57,6 +58,12 @@ class WindowLeftPanel(BaseWindow):
             "_btn_payment_access",
             None,
             UserAccess.READ_PAYMENT.value | UserAccess.CONTROL_PAYMENT.value,
+        ),
+        _BtnInfo(
+            "Логи",
+            "_btn_logs",
+            LogPanel.create,
+            UserAccess.READ_LOGS.value,
         ),
     ]
     _theme_names = [

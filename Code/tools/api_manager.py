@@ -1,6 +1,7 @@
 import logging
+from datetime import datetime
 from enum import Enum
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 from requests import Response, Session
 
@@ -35,7 +36,24 @@ class UserAccessTranslate(Enum):
     CONTROL_LOGS = "Управлять логами"
 
 
-# Реплика с сервераы
+class LogTypeTranslate(Enum):
+    LOGIN = "Вошёл"
+    LOGOUT = "Вышел"
+
+    CREATE_USER = "Создал пользователя"
+    DELETE_USER = "Удалил пользователя"
+    UPDATE_USER = "Обновил пользователя"
+
+    PAY_CREATE = "Оплата создана"
+    PAY_UPDATE = "Оплата обновлена"
+    PAY_RESIVE = "Оплата получена"
+    PAY_CANSEL = "Оплата отменена"
+
+    GAME_SERVER_START = "Сервер запщуен"
+    GAME_SERVER_STOP = "Сервер остановлен"
+
+
+# Реплики с сервера
 class UserAccess(Enum):
     NO_ACCESS = 0
     ALL_ACCESS = 1 << 0
@@ -55,6 +73,23 @@ class UserAccess(Enum):
 
     READ_LOGS = 1 << 10
     CONTROL_LOGS = 1 << 11
+
+
+class LogType(Enum):
+    LOGIN = 1
+    LOGOUT = 2
+
+    CREATE_USER = 3
+    DELETE_USER = 4
+    UPDATE_USER = 5
+
+    PAY_CREATE = 6
+    PAY_UPDATE = 7
+    PAY_RESIVE = 8
+    PAY_CANSEL = 9
+
+    GAME_SERVER_START = 10
+    GAME_SERVER_STOP = 11
 
 
 class APIManager:
@@ -93,7 +128,7 @@ class APIManager:
             cls._session.headers.update(headers)
 
     @classmethod
-    def _response_sanity_check(cls, response: Response) -> dict:
+    def _response_sanity_check(cls, response: Response) -> Any:
         if not response.ok:
             try:
                 error_detail = response.json().get("detail", response.text)
@@ -215,18 +250,17 @@ class APIManager:
     class user_control:
         @classmethod
         def get_info(cls, target: str) -> dict:
-            json_data = APIManager._requests(
+            return APIManager._requests(
                 "POST",
                 "/api/user_control/get_info",
                 json={"target": target},
             )
 
-            return json_data
-
         @classmethod
         def get_all(cls) -> list:
-            json_data = APIManager._requests("GET", "/api/user_control/get_all")
-            return json_data.get("logins", [])
+            return APIManager._requests("GET", "/api/user_control/get_all").get(
+                "logins", []
+            )
 
         @classmethod
         def delete(cls, target: str) -> None:
@@ -253,5 +287,35 @@ class APIManager:
 
         @classmethod
         def status(cls) -> dict[str, str]:
-            json_data = APIManager._requests("GET", "/api/server_control/status")
-            return json_data
+            return APIManager._requests("GET", "/api/server_control/status")
+
+    class logs:
+        @classmethod
+        def by_creator(cls, creator: str) -> list[dict[str, Any]]:
+            return APIManager._requests(
+                "POST", "/api/logs/by_creator", json={"target": creator}
+            )
+
+        @classmethod
+        def by_range(cls, start_id: int, end_id: int) -> list[dict[str, Any]]:
+            return APIManager._requests(
+                "POST",
+                "/api/logs/by_range",
+                json={"start_id": start_id, "end_id": end_id},
+            )
+
+        @classmethod
+        def by_time_range(
+            cls,
+            start_time: datetime,
+            end_time: datetime,
+        ) -> list[dict[str, Any]]:
+            return APIManager._requests(
+                "POST",
+                "/api/logs/by_time_range",
+                json={"start_time": start_time, "end_time": end_time},
+            )
+
+        @classmethod
+        def min_max_id(cls) -> dict[str, int]:
+            return APIManager._requests("GET", "/api/logs/min_max_id")

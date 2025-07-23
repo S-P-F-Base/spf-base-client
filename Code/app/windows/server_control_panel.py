@@ -60,6 +60,8 @@ class ServerControlPanel(BaseWindow):
 
     @classmethod
     def _act(cls, sender, app_data, user_data) -> None:
+        cls._update_status()  # Простая мера предосторожности
+
         if cls._server_status == "Выключен" and user_data == "stop":
             cls._summon_popup(
                 "Ошибка взаимодействия", "Вы не можете выключить выключенный сервер"

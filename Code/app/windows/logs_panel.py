@@ -17,6 +17,9 @@ class LogPanel(BaseWindow):
     _max_id = None
     _min_id = None
 
+    _current_page: int = 1
+    _total_pages: int = 1
+
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
         if not dpg.does_item_exist(cls._tag):
@@ -28,7 +31,10 @@ class LogPanel(BaseWindow):
             dpg.set_item_width("log_page_btns_spaser", window_width - 50 - 32)
 
     @classmethod
-    def _load_logs_by_range(cls, start_id: int, end_id: int) -> None:
+    def _load_logs_by_range(cls, start_id: int | None, end_id: int | None) -> None:
+        if start_id is None or end_id is None:
+            return
+
         logs = APIManager.logs.by_range(start_id, end_id)
         dpg.delete_item("log_table", children_only=True)
 
@@ -55,49 +61,55 @@ class LogPanel(BaseWindow):
                             dpg.add_text(str(val))
 
     @classmethod
-    def _get_20_log_entery(cls) -> None:
-        anser = APIManager.logs.min_max_id()
-        min_id, max_id = anser.values()
-        if min_id is None or max_id is None:
+    def _update_pagination(cls) -> None:
+        cls._min_id, cls._max_id = APIManager.logs.min_max_id().values()
+        if cls._min_id is None or cls._max_id is None:
+            cls._total_pages = 1
+            cls._current_page = 1
             return
 
-        cls._start_id = min_id
-        cls._end_id = min(min_id + cls._page_size - 1, max_id)
-        cls._load_logs_by_range(cls._start_id, cls._end_id)
+        total_logs = cls._max_id - cls._min_id + 1
+        cls._total_pages = max(1, (total_logs + cls._page_size - 1) // cls._page_size)
+
+        if cls._current_page > cls._total_pages:
+            cls._current_page = cls._total_pages
+        if cls._current_page < 1:
+            cls._current_page = 1
+
+    @classmethod
+    def _load_logs_for_page(cls, page: int) -> None:
+        cls._update_pagination()
+        cls._current_page = page
+
+        if cls._min_id is None or cls._max_id is None:
+            return
+
+        start_id = cls._min_id + (cls._current_page - 1) * cls._page_size
+        end_id = min(start_id + cls._page_size - 1, cls._max_id)
+
+        cls._start_id = start_id
+        cls._end_id = end_id
+
+        cls._load_logs_by_range(start_id, end_id)
+
+        if dpg.does_item_exist("log_page_info"):
+            dpg.set_value(
+                "log_page_info",
+                f"Логи сервера (Страница {cls._current_page}/{cls._total_pages})",
+            )
 
     @classmethod
     def _change_page(cls, sender, app_data, user_data) -> None:
-        if cls._start_id is None or cls._end_id is None:
-            return
+        cls._update_pagination()
+        if user_data == "next" and cls._current_page < cls._total_pages:
+            cls._load_logs_for_page(cls._current_page + 1)
+        elif user_data == "prev" and cls._current_page > 1:
+            cls._load_logs_for_page(cls._current_page - 1)
 
-        if cls._max_id is None or cls._min_id is None:
-            cls._min_id, cls._max_id = APIManager.logs.min_max_id().values()
-            if cls._min_id is None or cls._max_id is None:
-                return
-
-        if user_data == "next":
-            new_start = cls._end_id + 1
-            new_end = new_start + cls._page_size - 1
-
-            if new_start > cls._max_id:
-                return
-
-            if new_end > cls._max_id:
-                new_end = cls._max_id
-
-        else:
-            new_end = cls._start_id - 1
-            new_start = new_end - cls._page_size + 1
-
-            if new_end < cls._min_id:
-                return
-
-            if new_start < cls._min_id:
-                new_start = cls._min_id
-
-        cls._start_id = new_start
-        cls._end_id = new_end
-        cls._load_logs_by_range(cls._start_id, cls._end_id)
+    @classmethod
+    def _ref_log_id(cls) -> None:
+        cls._update_pagination()
+        cls._load_logs_for_page(cls._current_page)
 
     @classmethod
     def create(cls) -> None:
@@ -114,7 +126,13 @@ class LogPanel(BaseWindow):
             pos=[0, 0],
             no_scrollbar=True,
         ):
-            dpg.add_text("Логи сервера")
+            with dpg.group(horizontal=True):
+                dpg.add_text(
+                    f"Логи сервера (Страница {cls._current_page}/{cls._total_pages})",
+                    tag="log_page_info",
+                )
+                dpg.add_button(label="Обновить логи", callback=cls._ref_log_id)
+
             with dpg.table(
                 policy=dpg.mvTable_SizingStretchProp,
                 borders_outerH=True,
@@ -131,5 +149,5 @@ class LogPanel(BaseWindow):
                 dpg.add_spacer(tag="log_page_btns_spaser")
                 dpg.add_button(label="→", callback=cls._change_page, user_data="next")
 
-        cls._get_20_log_entery()
+        cls._load_logs_for_page(1)
         super().create()

@@ -193,16 +193,43 @@ class _UserInfoCard(BaseWindow):
             )
             return
 
-        logger.info("Ей... Ты удалил запись. Возможно")  # TODO: LOGIC
+        try:
+            APIManager.user_control.delete(cls._cur_user["login"])
+            UserAccessPanel.update_user_list()
+            UserAccessPanel.render_btns()
+        except APIError as err:
+            head = "Ошибка"
+            body = ""
+            if err.code == 403:
+                head += " доступа"
+                body = "У вас недостаточно прав чтобы удалить данного пользователя."
+            elif err.code == 404:
+                body = "Данного пользователя не существует."
+            else:
+                head += " сервера"
+                body = str(err)
 
-        UserAccessPanel.update_user_list()
-        UserAccessPanel.render_btns()
+            cls._summon_popup(head, body)
         cls._on_del()
 
     @classmethod
     def update_user(cls, sender, app_data, user_data) -> None:
-        logger.info(cls.collect_access_from_checkboxes())  # TODO: LOGIC
+        access = cls.collect_access_from_checkboxes()
+        try:
+            APIManager.user_control.set_access(cls._cur_user["login"], access)
+        except APIError as err:
+            head = "Ошибка"
+            body = ""
+            if err.code == 403:
+                head += " доступа"
+                body = "У вас недостаточно прав чтобы изменить выбранные права пользователя."
+            elif err.code == 404:
+                body = "Данного пользователя не существует."
+            else:
+                head += " сервера"
+                body = str(err)
 
+            cls._summon_popup(head, body)
         cls._on_del()
 
     @classmethod
@@ -214,8 +241,21 @@ class _UserInfoCard(BaseWindow):
             )
             return
 
-        logger.info(0)  # TODO: LOGIC
+        try:
+            APIManager.user_control.set_access(cls._cur_user["login"], 0)
+        except APIError as err:
+            head = "Ошибка"
+            body = ""
+            if err.code == 403:
+                head += " доступа"
+                body = "У вас недостаточно прав чтобы изменить выбранные права пользователя."
+            elif err.code == 404:
+                body = "Данного пользователя не существует."
+            else:
+                head += " сервера"
+                body = str(err)
 
+            cls._summon_popup(head, body)
         cls._on_del()
 
     # endregion

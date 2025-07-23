@@ -227,3 +227,17 @@ class APIManager:
         def get_all(cls) -> list:
             json_data = APIManager._requests("GET", "/api/user_control/get_all")
             return json_data.get("logins", [])
+
+        @classmethod
+        def delete(cls, target: str) -> None:
+            APIManager._requests(
+                "POST", "/api/user_control/delete", json={"target": target}
+            )
+
+        @classmethod
+        def set_access(cls, target: str, access: int) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/user_control/set_access",
+                json={"target": target, "access": access},
+            )

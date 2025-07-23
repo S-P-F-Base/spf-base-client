@@ -1,9 +1,16 @@
+import itertools
+import webbrowser
 from collections.abc import Callable
 from dataclasses import dataclass
 
 import dearpygui.dearpygui as dpg
 
-from Code.tools import APIManager, UserAccess, ViewportResizeManager
+from Code.tools import (
+    APIManager,
+    Config,
+    UserAccess,
+    ViewportResizeManager,
+)
 
 from .base_window import BaseWindow
 from .user_access_panel import UserAccessPanel
@@ -51,6 +58,20 @@ class WindowLeftPanel(BaseWindow):
             UserAccess.READ_PAYMENT.value | UserAccess.CONTROL_PAYMENT.value,
         ),
     ]
+    _theme_names = [
+        "theme_attention_0",
+        "theme_attention_1",
+        "theme_attention_2",
+        "theme_attention_3",
+        "theme_attention_4",
+        "theme_attention_5",
+        "theme_attention_4",
+        "theme_attention_3",
+        "theme_attention_2",
+        "theme_attention_1",
+    ]
+
+    _theme_cycle = itertools.cycle(_theme_names)
 
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
@@ -78,7 +99,7 @@ class WindowLeftPanel(BaseWindow):
         cls._on_del()
 
         APIManager.auth.logout()
-        UserAccessPanel.delete()
+        BaseWindow.close_all_windows()
 
         from .auth import WindowAuth
 
@@ -88,6 +109,8 @@ class WindowLeftPanel(BaseWindow):
 
     @classmethod
     def create(cls) -> None:
+        up_to_date_version = APIManager.download.version()
+
         with dpg.window(
             tag=cls._tag,
             no_title_bar=True,
@@ -107,9 +130,22 @@ class WindowLeftPanel(BaseWindow):
 
             with dpg.group(horizontal=True, tag=cls._tag + "_btn_logout"):
                 dpg.add_button(
-                    label="Выйти",
+                    label="Logout",
                     callback=cls._logout,
                 )
-                dpg.add_button(label="?", enabled=False)
+                dpg.add_button(
+                    label="?", show=False, enabled=False
+                )  # TODO: Когда ни будь доделать это
+                update_btn_id = dpg.add_button(
+                    label="!",
+                    show=Config.app_version != up_to_date_version,
+                    callback=lambda: webbrowser.open_new_tab(
+                        "https://spf-base.ru/download"
+                    ),
+                )
+                with dpg.tooltip(update_btn_id):
+                    dpg.add_text(f"Текущая версия приложения: {Config.app_version}")
+                    dpg.add_text(f"Доступная на сервере версия: {up_to_date_version}")
 
-        cls._setup_resize()
+        dpg.bind_item_theme(update_btn_id, "theme_attention")
+        super().create()

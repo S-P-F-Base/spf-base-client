@@ -110,6 +110,7 @@ class UserAccessPanel(BaseWindow):
             dpg.add_separator()
             cls.render_btns()
 
+        cls._add_window()
         cls._setup_resize()
 
     @classmethod
@@ -358,4 +359,4 @@ class _UserInfoCard(BaseWindow):
                     callback=cls._on_del,
                 )
 
-        cls._setup_resize()
+        super().create()

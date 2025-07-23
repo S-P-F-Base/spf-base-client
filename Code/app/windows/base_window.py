@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class BaseWindow:
     _tag = ""
     _popup_tag = _tag + "_popup"
+    _cur_active_windows = []
 
     # region Resize
     @classmethod
@@ -37,9 +38,22 @@ class BaseWindow:
     # endregion
 
     @classmethod
+    def close_all_windows(cls) -> None:
+        for item in BaseWindow._cur_active_windows:
+            if dpg.does_item_exist(item):
+                dpg.delete_item(item)
+
+    @classmethod
+    def _add_window(cls) -> None:
+        BaseWindow._cur_active_windows.append(cls._tag)
+
+    @classmethod
     def _on_del(cls) -> None:
         if dpg.does_item_exist(cls._tag):
             dpg.delete_item(cls._tag)
+
+        if cls._tag in BaseWindow._cur_active_windows:
+            BaseWindow._cur_active_windows.remove(cls._tag)
 
         ViewportResizeManager.remove_callback(cls._tag)
         TimerManager.remove_timer(cls._tag)
@@ -69,7 +83,9 @@ class BaseWindow:
 
     # region Public
     @classmethod
-    def create(cls) -> None: ...
+    def create(cls) -> None:
+        cls._add_window()
+        cls._setup_resize()
 
     @classmethod
     def focus(cls) -> None:

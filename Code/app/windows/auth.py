@@ -141,7 +141,7 @@ class WindowAuth(BaseWindow):
 
         dpg.focus_item("login_text")
         dpg.set_primary_window(cls._tag, True)
-        cls._setup_resize()
+        super().create()
 
     @classmethod
     def _switch(cls) -> None:

@@ -55,6 +55,12 @@ class UserAccessPanel(BaseWindow):
             dpg.configure_item(group_id, show=visible)
 
     @classmethod
+    def _ref_users(cls) -> None:
+        cls._user_list = sorted(APIManager.user_control.get_all())
+        cls.render_btns()
+        cls._invoce_resize()
+
+    @classmethod
     def update_user_list(cls) -> None:
         cls._user_list = sorted(APIManager.user_control.get_all())
 
@@ -63,6 +69,8 @@ class UserAccessPanel(BaseWindow):
         for item in cls._group_ids:
             if dpg.does_item_exist(item):
                 dpg.delete_item(item)
+
+            cls._group_ids.clear()
 
         cur_item = 0
         cur_group = dpg.add_group(horizontal=True, parent=cls._tag)
@@ -98,7 +106,10 @@ class UserAccessPanel(BaseWindow):
             pos=[0, 0],
             no_scrollbar=True,
         ):
-            dpg.add_text("Управление пользователями")
+            with dpg.group(horizontal=True):
+                dpg.add_text("Управление пользователями")
+                dpg.add_button(label="Обновить список", callback=cls._ref_users)
+
             dpg.add_separator()
 
             dpg.add_input_text(
@@ -113,9 +124,9 @@ class UserAccessPanel(BaseWindow):
         super().create()
 
     @classmethod
-    def delete(cls) -> None:
+    def _on_del(cls) -> None:
         _UserInfoCard.delete()
-        return super().delete()
+        super()._on_del()
 
 
 @dataclass

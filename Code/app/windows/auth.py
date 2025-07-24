@@ -11,7 +11,7 @@ from .left_panel import WindowLeftPanel
 class WindowAuth(BaseWindow):
     _tag = "WindowAuth"
     _is_login: bool = True
-    _see_password: bool = True
+    _is_password: bool = True
 
     @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
@@ -85,6 +85,9 @@ class WindowAuth(BaseWindow):
 
     @classmethod
     def create(cls) -> None:
+        cls._is_login = True
+        cls._is_password = True
+
         with dpg.window(
             tag=cls._tag,
             on_close=cls._on_del,
@@ -117,7 +120,7 @@ class WindowAuth(BaseWindow):
             dpg.add_input_text(
                 tag="password_text",
                 hint="Пароль",
-                password=cls._see_password,
+                password=cls._is_password,
                 callback=lambda: dpg.focus_item("password_text_2")
                 if dpg.does_item_exist("password_text_2")
                 else cls._enter(),
@@ -159,7 +162,7 @@ class WindowAuth(BaseWindow):
             dpg.add_input_text(
                 tag="password_text_2",
                 hint="Повтор пароля",
-                password=cls._see_password,
+                password=cls._is_password,
                 parent=cls._tag,
                 callback=cls._enter,
                 on_enter=True,
@@ -259,8 +262,8 @@ class WindowAuth(BaseWindow):
 
     @classmethod
     def _toggle_see_password(cls) -> None:
-        cls._see_password = not cls._see_password
+        cls._is_password = not cls._is_password
 
-        dpg.configure_item("password_text", password=cls._see_password)
+        dpg.configure_item("password_text", password=cls._is_password)
         if dpg.does_item_exist("password_text_2"):
-            dpg.configure_item("password_text_2", password=cls._see_password)
+            dpg.configure_item("password_text_2", password=cls._is_password)

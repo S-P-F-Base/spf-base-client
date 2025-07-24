@@ -54,7 +54,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        run: pyinstaller main.py --add-data=Data:Data
+        run: pyinstaller main.py --noconsole --add-data=Data:Data
 
       - name: Create ZIP archive
         run: ${{ matrix.zip-command }}

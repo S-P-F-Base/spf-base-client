@@ -144,6 +144,7 @@ class WindowLeftPanel(BaseWindow):
                 dpg.add_button(
                     label="?", show=False, enabled=False
                 )  # TODO: Когда ни будь доделать это
+
                 update_btn_id = dpg.add_button(
                     label="!",
                     show=Config.app_version != up_to_date_version,
@@ -151,9 +152,12 @@ class WindowLeftPanel(BaseWindow):
                         "https://spf-base.ru/download"
                     ),
                 )
-                with dpg.tooltip(update_btn_id):
-                    dpg.add_text(f"Текущая версия приложения: {Config.app_version}")
-                    dpg.add_text(f"Доступная на сервере версия: {up_to_date_version}")
+                if dpg.is_item_shown(update_btn_id):
+                    with dpg.tooltip(update_btn_id):
+                        dpg.add_text(f"Текущая версия приложения: {Config.app_version}")
+                        dpg.add_text(
+                            f"Доступная на сервере версия: {up_to_date_version}"
+                        )
 
         dpg.bind_item_theme(update_btn_id, "theme_attention")
         super().create()

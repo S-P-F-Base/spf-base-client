@@ -96,7 +96,7 @@ class ServerControlPanel(BaseWindow):
             dpg.add_separator()
 
             with dpg.group(horizontal=True):
-                dpg.add_text("Статус сервера")
+                dpg.add_text("Статус сервера:")
                 dpg.add_text(
                     "Загрузка данных...",
                     tag="server_status_text",

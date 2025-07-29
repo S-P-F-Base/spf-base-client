@@ -1,11 +1,13 @@
 import logging
+import sys
 from datetime import datetime
 from enum import Enum
-from typing import Any, Final, Literal
+from typing import Any, Literal
 
 from requests import Response, Session
 
 from .config import Config
+from .web_soket_client import WebSocketClient
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +95,8 @@ class LogType(Enum):
 
 
 class APIManager:
-    _base_url: Final[str] = "https://spf-base.ru/"
+    _base_domain: str = "spf-base.ru"
+    _base_url: str = f"https://{_base_domain}/"
     _session: Session = Session()
     cur_user = {
         "login": "",
@@ -157,9 +160,13 @@ class APIManager:
             return cls._response_sanity_check(response)
 
         except APIError as err:
-            if str(err) == "Token expired" and _retry:
-                cls._refresh()
-                return cls._requests(method, url, False, **kwargs)
+            if str(err) == "Token expired":
+                if _retry:
+                    cls._refresh()
+                    return cls._requests(method, url, False, **kwargs)
+
+                else:
+                    sys.exit(1)
 
             else:
                 raise err
@@ -214,6 +221,10 @@ class APIManager:
             )
 
             APIManager._update_auth_headers(**json_data)
+            WebSocketClient.connect(
+                f"wss://{APIManager._base_domain}/api/websocket/connect",
+                APIManager._session.headers["Authorization"],  # type: ignore
+            )
 
         @classmethod
         def register(cls, login: str, password: str) -> None:
@@ -225,7 +236,12 @@ class APIManager:
                     "password": password,
                 },
             )
+
             APIManager._update_auth_headers(**json_data)
+            WebSocketClient.connect(
+                f"wss://{APIManager._base_domain}/api/websocket/connect",
+                APIManager._session.headers["Authorization"],  # type: ignore
+            )
 
         @classmethod
         def login_refresh(cls) -> bool:
@@ -234,6 +250,10 @@ class APIManager:
                     refresh_token=Config.get_refresh_token_form_file()
                 )
                 APIManager._refresh()
+                WebSocketClient.connect(
+                    f"wss://{APIManager._base_domain}/api/websocket/connect",
+                    APIManager._session.headers["Authorization"],  # type: ignore
+                )
                 return True
 
             except Exception:
@@ -286,8 +306,18 @@ class APIManager:
             APIManager._requests("GET", "/api/server_control/stop")
 
         @classmethod
-        def status(cls) -> dict[str, str]:
-            return APIManager._requests("GET", "/api/server_control/status")
+        def status(cls) -> str:
+            return APIManager._requests("GET", "/api/server_control/status").get(
+                "status"
+            )
+
+        @classmethod
+        def status_subscribe(cls) -> dict[str, str]:
+            return APIManager._requests("GET", "/api/server_control/status/subscribe")
+
+        @classmethod
+        def status_unsubscribe(cls) -> dict[str, str]:
+            return APIManager._requests("GET", "/api/server_control/status/unsubscribe")
 
     class logs:
         @classmethod

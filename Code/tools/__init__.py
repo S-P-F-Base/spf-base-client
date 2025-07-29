@@ -12,3 +12,4 @@ from .texture_manager import TextureManager
 from .themes_manager import ThemesManager
 from .timer_manager import TimerManager
 from .viewport_resize import ViewportResizeManager
+from .web_soket_client import WebSocketClient

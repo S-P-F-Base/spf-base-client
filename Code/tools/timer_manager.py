@@ -30,7 +30,7 @@ class TimerManager:
             return
 
         cls._stop_event.clear()
-        cls._thread = Thread(target=cls._timer_worker, daemon=True)
+        cls._thread = Thread(target=cls._timer_worker, name="TimerManager", daemon=True)
         cls._thread.start()
         cls._is_initialized = True
 

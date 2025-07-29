@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 
-from Code.tools import APIError, APIManager, TimerManager
+from Code.tools import APIManager, WebSocketClient
 
 from .base_window import BaseWindow
 
@@ -23,13 +23,7 @@ class ServerControlPanel(BaseWindow):
                 dpg.configure_item(tag, enabled=enabled)
 
     @classmethod
-    def _update_status(cls) -> None:
-        try:
-            cls._server_status = APIManager.server_control.status()["text"]
-        except APIError as err:
-            cls._summon_popup("Ошибка получения данных", f"Code: {err.code}; {err}")
-            return
-
+    def _setup_status(cls) -> None:
         if not dpg.does_item_exist("server_status_text"):
             return
 
@@ -54,9 +48,12 @@ class ServerControlPanel(BaseWindow):
         dpg.configure_item("server_status_text", color=color)
 
     @classmethod
-    def _act(cls, sender, app_data, user_data) -> None:
-        cls._update_status()  # Простая мера предосторожности
+    def _update_status(cls, status: str) -> None:
+        cls._server_status = status
+        cls._setup_status()
 
+    @classmethod
+    def _act(cls, sender, app_data, user_data) -> None:
         if cls._server_status == "Выключен" and user_data == "stop":
             cls._summon_popup(
                 "Ошибка взаимодействия", "Вы не можете выключить выключенный сервер"
@@ -103,10 +100,6 @@ class ServerControlPanel(BaseWindow):
                     color=[255, 255, 0],
                 )
 
-            dpg.add_text(
-                "В ввиду технических причин, включение и выключение сервера может занимать до 1 минуты.",
-                wrap=0,
-            )
             dpg.add_separator()
             with dpg.group(horizontal=True):
                 dpg.add_button(
@@ -122,6 +115,16 @@ class ServerControlPanel(BaseWindow):
                     user_data="stop",
                 )
 
-        TimerManager.add_timer(cls._tag, cls._update_status, 15)
-        cls._update_status()
+        WebSocketClient.subscribe("server_control_status", cls._update_status)
+        APIManager.server_control.status_subscribe()
+
+        cls._server_status = APIManager.server_control.status()
+        cls._setup_status()
+
         super().create()
+
+    @classmethod
+    def _on_del(cls) -> None:
+        super()._on_del()
+        APIManager.server_control.status_unsubscribe()
+        WebSocketClient.unsubscribe("server_control_status", cls._update_status)

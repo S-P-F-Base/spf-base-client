@@ -14,8 +14,9 @@ from Code.tools import (
 )
 
 from .base_window import BaseWindow
-from .console_window import ConsolePanel
+from .console_panel import ConsolePanel
 from .logs_panel import LogPanel
+from .lore_char_control_panel import LoreCharControlPanel
 from .server_control_panel import ServerControlPanel
 from .user_access_panel import UserAccessPanel
 
@@ -48,6 +49,12 @@ class WindowLeftPanel(BaseWindow):
             "_btn_player_control",
             None,
             UserAccess.READ_PLAYER.value | UserAccess.CONTROL_PLAYER.value,
+        ),
+        _BtnInfo(
+            "Управление лорными персонажами",
+            "_btn_char_control",
+            LoreCharControlPanel.create,
+            UserAccess.LORE_CHAR_CONTROL.value,
         ),
         _BtnInfo(
             "Оплата доната",

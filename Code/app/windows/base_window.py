@@ -60,15 +60,19 @@ class BaseWindow:
         app_data: tuple[int, int, int, int],
         size: tuple[float, float] | list[float],
         pos: tuple[float, float] | list[float],
+        tag: str | int | None = None,
     ) -> tuple[int, int]:
+        if tag is None:
+            tag = cls._tag
+
         window_width = int(app_data[2] * size[0])
         window_hight = int(app_data[3] * size[1])
 
-        dpg.set_item_width(cls._tag, window_width)
-        dpg.set_item_height(cls._tag, window_hight)
+        dpg.set_item_width(tag, window_width)
+        dpg.set_item_height(tag, window_hight)
 
         dpg.set_item_pos(
-            cls._tag,
+            tag,
             [
                 (app_data[2] * pos[0]),
                 (app_data[3] * pos[1]),

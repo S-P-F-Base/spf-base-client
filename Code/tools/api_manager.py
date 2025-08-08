@@ -351,6 +351,57 @@ class APIManager:
         def status_unsubscribe(cls) -> dict[str, str]:
             return APIManager._requests("GET", "/api/server_control/status/unsubscribe")
 
+    class lore_char_control:
+        @classmethod
+        def get(cls) -> dict[str, Any]:
+            return APIManager._requests("GET", "/api/lore_char_control/get")
+
+        @classmethod
+        def create(
+            cls,
+            key: str,
+            name: str,
+            status: Literal["free", "taken", "blocked"],
+            wiki: str | None,
+        ) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/lore_char_control/create",
+                json={
+                    "key": key,
+                    "name": name,
+                    "status": status,
+                    "wiki": wiki,
+                },
+            )
+
+        @classmethod
+        def edit(
+            cls,
+            key: str,
+            name: str,
+            status: Literal["free", "taken", "blocked"],
+            wiki: str | None,
+        ) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/lore_char_control/edit",
+                json={
+                    "key": key,
+                    "name": name,
+                    "status": status,
+                    "wiki": wiki,
+                },
+            )
+
+        @classmethod
+        def delete(cls, key: str) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/lore_char_control/delete",
+                json={"key": key},
+            )
+
     class logs:
         @classmethod
         def by_creator(cls, creator: str) -> list[dict[str, Any]]:

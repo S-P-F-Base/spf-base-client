@@ -70,7 +70,7 @@ class UserAccessPanel(BaseWindow):
             if dpg.does_item_exist(item):
                 dpg.delete_item(item)
 
-            cls._group_ids.clear()
+        cls._group_ids.clear()
 
         cur_item = 0
         cur_group = dpg.add_group(horizontal=True, parent=cls._tag)

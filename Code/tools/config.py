@@ -16,7 +16,7 @@ class Config:
     _root_dir: Path = Path(__file__).resolve().parents[2]
     _config_data: dict[str, Any] = {}
 
-    app_version: Final[str] = "v0.1.2"
+    app_version: Final[str] = "v0.2.0"
     _config_serl_ver: Final[str] = "1"
 
     # region colors

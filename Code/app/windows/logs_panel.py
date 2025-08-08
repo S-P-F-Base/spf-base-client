@@ -21,6 +21,12 @@ class LogPanel(BaseWindow):
     _total_pages: int = 1
 
     @classmethod
+    def _shorten_string(cls, val: str, max_len: int = 50) -> str:
+        if len(val) <= max_len:
+            return val
+        return val[: max_len - 3].rstrip() + "..."
+
+    @classmethod
     def _on_resize(cls, app_data: tuple[int, int, int, int]) -> None:
         if not dpg.does_item_exist(cls._tag):
             return
@@ -46,6 +52,7 @@ class LogPanel(BaseWindow):
                 for key in ["id", "type", "time", "value", "creator"]:
                     with dpg.table_cell():
                         val = log[key]
+
                         if key == "time" and isinstance(val, str):
                             dt = datetime.fromisoformat(val)
                             val = dt.strftime("%H:%M:%S %d.%m.%Y")
@@ -55,10 +62,13 @@ class LogPanel(BaseWindow):
                                 val = LogTypeTranslate[type_name].value
                             except Exception:
                                 val = str(val)
-
-                        dpg.add_text(str(val))
-                        with dpg.tooltip(dpg.last_item()):
+                        if key == "value":
+                            dpg.add_text(cls._shorten_string(str(val)))
+                        else:
                             dpg.add_text(str(val))
+
+                        with dpg.tooltip(dpg.last_item()):
+                            dpg.add_text(str(val), wrap=400)
 
     @classmethod
     def _update_pagination(cls) -> None:

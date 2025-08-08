@@ -52,6 +52,8 @@ def configure_logging(debug: bool):
         encoding="utf-8",
     )
 
+    logging.getLogger("websocket").setLevel(logging.WARNING)
+
 
 def main():
     logging.debug("Starting program...")

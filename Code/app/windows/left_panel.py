@@ -10,9 +10,11 @@ from Code.tools import (
     Config,
     UserAccess,
     ViewportResizeManager,
+    WebSocketClient,
 )
 
 from .base_window import BaseWindow
+from .console_window import ConsolePanel
 from .logs_panel import LogPanel
 from .server_control_panel import ServerControlPanel
 from .user_access_panel import UserAccessPanel
@@ -65,7 +67,14 @@ class WindowLeftPanel(BaseWindow):
             LogPanel.create,
             UserAccess.READ_LOGS.value,
         ),
+        _BtnInfo(
+            "Консоль",
+            "_btn_consol",
+            ConsolePanel.create,
+            UserAccess.ALL_ACCESS.value,
+        ),
     ]
+
     _theme_names = [
         "theme_attention_0",
         "theme_attention_1",
@@ -107,6 +116,7 @@ class WindowLeftPanel(BaseWindow):
         cls._on_del()
 
         APIManager.auth.logout()
+        WebSocketClient.disconnect()
         BaseWindow.close_all_windows()
 
         from .auth import WindowAuth
@@ -115,9 +125,16 @@ class WindowLeftPanel(BaseWindow):
         dpg.render_dearpygui_frame()
         ViewportResizeManager.invoke()
 
+    @staticmethod
+    def parse_version(v: str) -> tuple[int, ...]:
+        v = v.removeprefix("v")
+        return tuple(int(part) for part in v.split("."))
+
     @classmethod
     def create(cls) -> None:
         up_to_date_version = APIManager.download.version()
+        if up_to_date_version is None:
+            up_to_date_version = Config.app_version
 
         with dpg.window(
             tag=cls._tag,
@@ -141,13 +158,11 @@ class WindowLeftPanel(BaseWindow):
                     label="Logout",
                     callback=cls._logout,
                 )
-                dpg.add_button(
-                    label="?", show=False, enabled=False
-                )  # TODO: Когда ни будь доделать это
 
                 update_btn_id = dpg.add_button(
                     label="!",
-                    show=Config.app_version != up_to_date_version,
+                    show=cls.parse_version(Config.app_version)
+                    < cls.parse_version(up_to_date_version),
                     callback=lambda: webbrowser.open_new_tab(
                         "https://spf-base.ru/download"
                     ),

@@ -37,14 +37,18 @@ class UserAccessTranslate(Enum):
     READ_LOGS = "Читать логи"
     CONTROL_LOGS = "Управлять логами"
 
+    SERVICE_CONTROL = "Управлять услугами"
+
+    LORE_CHAR_CONTROL = "Управлять лорными персонажами"
+
 
 class LogTypeTranslate(Enum):
     LOGIN = "Вошёл"
     LOGOUT = "Вышел"
 
-    CREATE_USER = "Создал пользователя"
-    DELETE_USER = "Удалил пользователя"
-    UPDATE_USER = "Обновил пользователя"
+    USER_CREATE = "Создал пользователя"
+    USER_DELETE = "Удалил пользователя"
+    USER_UPDATE = "Обновил пользователя"
 
     PAY_CREATE = "Оплата создана"
     PAY_UPDATE = "Оплата обновлена"
@@ -53,6 +57,18 @@ class LogTypeTranslate(Enum):
 
     GAME_SERVER_START = "Сервер запщуен"
     GAME_SERVER_STOP = "Сервер остановлен"
+
+    PLAYER_CREATED = "Игрок создан"
+    PLAYER_UPDATE = "Игрок обновлён"
+    PLAYER_DELETE = "Игрок удалён"
+
+    SERVICE_CREATE = "Услуга создана"
+    SERVICE_UPDATE = "Услуга изменена"
+    SERVICE_DELETE = "Услуга удалена"
+
+    LORE_CHAR_CREATE = "Лорный персонаж создан"
+    LORE_CHAR_EDIT = "Лорный персонаж изменён"
+    LORE_CHAR_DELETE = "Лорный персонаж удалён"
 
 
 # Реплики с сервера
@@ -76,14 +92,18 @@ class UserAccess(Enum):
     READ_LOGS = 1 << 10
     CONTROL_LOGS = 1 << 11
 
+    SERVICE_CONTROL = 1 << 12
+
+    LORE_CHAR_CONTROL = 1 << 13
+
 
 class LogType(Enum):
     LOGIN = 1
     LOGOUT = 2
 
-    CREATE_USER = 3
-    DELETE_USER = 4
-    UPDATE_USER = 5
+    USER_CREATE = 3
+    USER_DELETE = 4
+    USER_UPDATE = 5
 
     PAY_CREATE = 6
     PAY_UPDATE = 7
@@ -92,6 +112,18 @@ class LogType(Enum):
 
     GAME_SERVER_START = 10
     GAME_SERVER_STOP = 11
+
+    PLAYER_CREATED = 12
+    PLAYER_UPDATE = 13
+    PLAYER_DELETE = 14
+
+    SERVICE_CREATE = 15
+    SERVICE_UPDATE = 16
+    SERVICE_DELETE = 17
+
+    LORE_CHAR_CREATE = 18
+    LORE_CHAR_EDIT = 19
+    LORE_CHAR_DELETE = 20
 
 
 class APIManager:

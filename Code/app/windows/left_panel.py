@@ -17,6 +17,7 @@ from .base_window import BaseWindow
 from .console_panel import ConsolePanel
 from .logs_panel import LogPanel
 from .lore_char_control_panel import LoreCharControlPanel
+from .player_control_panel import PlayerControlPanel
 from .server_control_panel import ServerControlPanel
 from .user_access_panel import UserAccessPanel
 
@@ -47,7 +48,7 @@ class WindowLeftPanel(BaseWindow):
         _BtnInfo(
             "Управление игроками",
             "_btn_player_control",
-            None,
+            PlayerControlPanel.create,
             UserAccess.READ_PLAYER.value | UserAccess.CONTROL_PLAYER.value,
         ),
         _BtnInfo(

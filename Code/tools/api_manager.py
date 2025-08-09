@@ -351,6 +351,78 @@ class APIManager:
         def status_unsubscribe(cls) -> dict[str, str]:
             return APIManager._requests("GET", "/api/server_control/status/unsubscribe")
 
+    class player_control:
+        @classmethod
+        def create(cls, discord_name: str, steam_url: str) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/player_control/create",
+                json={
+                    "discord_name": discord_name,
+                    "steam_url": steam_url,
+                },
+            )
+
+        @classmethod
+        def get(
+            cls,
+            discord_id: str | None = None,
+            steam_id: str | None = None,
+        ) -> list[dict]:
+            query_str = ""
+            if bool(discord_id or steam_id):
+                query_str = "?"
+                if discord_id:
+                    query_str += f"discord_id={discord_id}"
+                if steam_id:
+                    if query_str != "?":
+                        query_str += "&"
+                    query_str += f"steam_id={steam_id}"
+
+            return APIManager._requests("GET", f"/api/player_control/get{query_str}")
+
+        @classmethod
+        def edit(
+            cls,
+            u_id: int,
+            discord_name: str | None,
+            discord_avatar: str | None,
+            blacklist: dict[str, bool] | None,
+        ) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/player_control/edit",
+                json={
+                    "u_id": u_id,
+                    "discord_name": discord_name,
+                    "discord_avatar": discord_avatar,
+                    "blacklist": blacklist,
+                },
+            )
+
+        @classmethod
+        def add_note(cls, u_id: int, text: str) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/player_control/note/add",
+                json={
+                    "u_id": u_id,
+                    "text": text,
+                },
+            )
+
+        @classmethod
+        def change_note_status(cls, u_id: int, index: int, status: str) -> None:
+            APIManager._requests(
+                "POST",
+                "/api/player_control/note/status",
+                json={
+                    "u_id": u_id,
+                    "index": index,
+                    "status": status,
+                },
+            )
+
     class lore_char_control:
         @classmethod
         def get(cls) -> dict[str, Any]:

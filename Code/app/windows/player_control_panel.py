@@ -188,7 +188,7 @@ class PlayerControlPanel(BaseWindow):
             app_data, [0.85, 0.8], [0.075, 0.1], cls._tag + "_modal_edit"
         )
 
-        for tag in ("edit_discord_name", "edit_discord_avatar"):
+        for tag in ("edit_discord_name", "edit_mb_limit", "edit_mb_taken"):
             if dpg.does_item_exist(tag):
                 dpg.set_item_width(tag, window_width - 16)
 
@@ -248,10 +248,19 @@ class PlayerControlPanel(BaseWindow):
                 default_value=data.get("discord_name", ""),
                 hint="Discord name (опционально)",
             )
+
+            cur_limit = float(data.get("mb_limit") or 0.0)
+            cur_taken = float(data.get("mb_taken") or 0.0)
+            dpg.add_separator()
+            dpg.add_text(f"Текущие лимиты: limit={cur_limit} | taken={cur_taken}")
+
             dpg.add_input_text(
-                tag="edit_discord_avatar",
-                default_value=data.get("discord_avatar", ""),
-                hint="Discord avatar URL (опционально)",
+                tag="edit_mb_limit",
+                hint="mb_limit: =N / +N / -N или просто N",
+            )
+            dpg.add_input_text(
+                tag="edit_mb_taken",
+                hint="mb_taken: =N / +N / -N или просто N (можно > лимита)",
             )
             dpg.add_separator()
 
@@ -385,14 +394,28 @@ class PlayerControlPanel(BaseWindow):
     @classmethod
     def _save_player(cls, u_id: int) -> None:
         discord_name = dpg.get_value("edit_discord_name").strip()
-        discord_avatar = dpg.get_value("edit_discord_avatar").strip()
         blacklist = cls._collect_blacklist()
+
+        mb_limit_raw = (
+            dpg.get_value("edit_mb_limit").strip()
+            if dpg.does_item_exist("edit_mb_limit")
+            else ""
+        )
+        mb_taken_raw = (
+            dpg.get_value("edit_mb_taken").strip()
+            if dpg.does_item_exist("edit_mb_taken")
+            else ""
+        )
+
+        mb_limit = mb_limit_raw if mb_limit_raw else None
+        mb_taken = mb_taken_raw if mb_taken_raw else None
 
         APIManager.player_control.edit(
             u_id=u_id,
             discord_name=discord_name or None,
-            discord_avatar=discord_avatar or None,
             blacklist=blacklist or None,
+            mb_limit=mb_limit or None,
+            mb_taken=mb_taken or None,
         )
 
         cls._refresh()
@@ -404,10 +427,12 @@ class PlayerControlPanel(BaseWindow):
         text = dpg.get_value("add_note_text").strip()
         if not text:
             raise RuntimeError("Note text is required")
+
         APIManager.player_control.add_note(u_id=u_id, text=text)
         cls._p_data = APIManager.player_control.get()
         if dpg.does_item_exist(cls._tag + "_modal_edit"):
             dpg.delete_item(cls._tag + "_modal_edit")
+
         cls._edit_modal_window(None, None, u_id)
 
     @classmethod
@@ -415,13 +440,16 @@ class PlayerControlPanel(BaseWindow):
         tag = f"note_status_input__{index}"
         if not dpg.does_item_exist(tag):
             raise RuntimeError("Status input not found")
+
         status = dpg.get_value(tag).strip()
         if not status:
             raise RuntimeError("New status is required")
+
         APIManager.player_control.change_note_status(
             u_id=u_id, index=index, status=status
         )
         cls._p_data = APIManager.player_control.get()
         if dpg.does_item_exist(cls._tag + "_modal_edit"):
             dpg.delete_item(cls._tag + "_modal_edit")
+
         cls._edit_modal_window(None, None, u_id)

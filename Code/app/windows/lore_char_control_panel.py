@@ -15,10 +15,13 @@ class LoreCharControlPanel(BaseWindow):
         match status:
             case "free":
                 return "Доступен"
+
             case "taken":
                 return "Занят"
+
             case "blocked":
                 return "Заблокирован"
+
             case _:
                 return "Доступен"
 
@@ -184,8 +187,10 @@ class LoreCharControlPanel(BaseWindow):
         match status:
             case "Доступен":
                 status = "free"
+
             case "Занят":
                 status = "taken"
+
             case "Заблокирован":
                 status = "blocked"
 

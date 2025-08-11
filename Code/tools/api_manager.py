@@ -386,8 +386,9 @@ class APIManager:
             cls,
             u_id: int,
             discord_name: str | None,
-            discord_avatar: str | None,
             blacklist: dict[str, bool] | None,
+            mb_limit: float | None,
+            mb_taken: float | None,
         ) -> None:
             APIManager._requests(
                 "POST",
@@ -395,8 +396,9 @@ class APIManager:
                 json={
                     "u_id": u_id,
                     "discord_name": discord_name,
-                    "discord_avatar": discord_avatar,
                     "blacklist": blacklist,
+                    "mb_limit": mb_limit,
+                    "mb_taken": mb_taken,
                 },
             )
 
@@ -504,3 +506,126 @@ class APIManager:
         @classmethod
         def min_max_id(cls) -> dict[str, int]:
             return APIManager._requests("GET", "/api/logs/min_max_id")
+
+    class service_control:
+        @classmethod
+        def create(
+            cls,
+            name: str,
+            description: str,
+            price_main: str,
+            discount_value: int = 0,
+            discount_date: str | None = None,
+            status: Literal["on", "off", "archive"] = "off",
+            left: int | None = None,
+            sell_time: str | None = None,
+            oferta_limit: bool = False,
+        ) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/service_control/create",
+                json={
+                    "name": name,
+                    "description": description,
+                    "price_main": price_main,
+                    "discount_value": discount_value,
+                    "discount_date": discount_date,
+                    "status": status,
+                    "left": left,
+                    "sell_time": sell_time,
+                    "oferta_limit": oferta_limit,
+                },
+            )
+
+        @classmethod
+        def delete(cls, u_id: str) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/service_control/delete",
+                json={"u_id": u_id},
+            )
+
+        @classmethod
+        def edit(cls, u_id: str, **fields) -> dict:
+            payload = {"u_id": u_id}
+            payload.update(fields)
+
+            return APIManager._requests(
+                "POST",
+                "/api/service_control/edit",
+                json=payload,
+            )
+
+        @classmethod
+        def get(cls, u_id: str) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/service_control/get",
+                json={"u_id": str(u_id)},
+            )
+
+        @classmethod
+        def list(cls) -> list[dict]:
+            return APIManager._requests("GET", "/api/service_control/list")
+
+    class payment_control:
+        @classmethod
+        def create(
+            cls,
+            player_id: str,
+            items: list[dict],
+            commission_key: str = "AC",
+            status: str = "pending",
+        ) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/payment_control/create",
+                json={
+                    "player_id": player_id,
+                    "items": items,
+                    "commission_key": commission_key,
+                    "status": status,
+                },
+            )
+
+        @classmethod
+        def delete(cls, u_id: str) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/payment_control/delete",
+                json={"u_id": u_id},
+            )
+
+        @classmethod
+        def edit(
+            cls,
+            u_id: str,
+            status: str | None = None,
+            player_id: str | None = None,
+            commission_key: str | None = None,
+        ) -> dict:
+            payload: dict = {"u_id": u_id}
+            if status is not None:
+                payload["status"] = status
+            if player_id is not None:
+                payload["player_id"] = player_id
+            if commission_key is not None:
+                payload["commission_key"] = commission_key
+
+            return APIManager._requests(
+                "POST",
+                "/api/payment_control/edit",
+                json=payload,
+            )
+
+        @classmethod
+        def get(cls, u_id: str) -> dict:
+            return APIManager._requests(
+                "POST",
+                "/api/payment_control/get",
+                json={"u_id": u_id},
+            )
+
+        @classmethod
+        def list(cls) -> list[dict]:
+            return APIManager._requests("GET", "/api/payment_control/list")

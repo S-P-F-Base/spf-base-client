@@ -17,8 +17,10 @@ from .base_window import BaseWindow
 from .console_panel import ConsolePanel
 from .logs_panel import LogPanel
 from .lore_char_control_panel import LoreCharControlPanel
+from .payment_control_panel import PaymentControlPanel
 from .player_control_panel import PlayerControlPanel
 from .server_control_panel import ServerControlPanel
+from .service_control_panel import ServiceControlPanel
 from .user_access_panel import UserAccessPanel
 
 
@@ -58,15 +60,15 @@ class WindowLeftPanel(BaseWindow):
             UserAccess.LORE_CHAR_CONTROL.value,
         ),
         _BtnInfo(
-            "Оплата доната",
+            "Управление оплатой",
             "_btn_payment_give",
-            None,
+            PaymentControlPanel.create,
             UserAccess.READ_PAYMENT.value | UserAccess.GIVE_PAYMENT.value,
         ),
         _BtnInfo(
-            "Управление донат услугами",
+            "Управление сервисами",
             "_btn_payment_access",
-            None,
+            ServiceControlPanel.create,
             UserAccess.READ_PAYMENT.value | UserAccess.CONTROL_PAYMENT.value,
         ),
         _BtnInfo(

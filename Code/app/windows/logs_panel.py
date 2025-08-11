@@ -24,6 +24,7 @@ class LogPanel(BaseWindow):
     def _shorten_string(cls, val: str, max_len: int = 50) -> str:
         if len(val) <= max_len:
             return val
+     
         return val[: max_len - 3].rstrip() + "..."
 
     @classmethod
